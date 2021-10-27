@@ -16,6 +16,7 @@ Command: "print" _WS (list_access | textwithoutspaces | punctuation) -> print
 	| "turn" _WS (list_access | textwithoutspaces) -> turn
 	| var _WS "is" _WS text -> assign
 	| var _WS "is" _WS (text_list _WS ("," _WS text_list)+) -> assign_list
+	| (text_list _WS ("," _WS text_list)*)? -> dummy
 	| text -> invalid_space // error production
 	| textwithoutspaces _WS text? -> invalid // error production
 

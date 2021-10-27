@@ -8,9 +8,8 @@ import List;
 import AST;
 
 
-loc levelLoc(str name, loc base, ALevel l) {
-  return base[file="<name>-<l.n>.lark"];
-}
+loc levelLoc(str name, loc base, ALevel l)
+  = base[file="<name>-<l.n>.lark"];
 
 void compile(start[Module] pt) {
   AGrammar g = implode(pt);
@@ -31,10 +30,10 @@ ALevel normalize(ALevel level) {
   return visit (level) {
     case r:reg(ASymbol arg): {
       if (r.sep != "") {
-        if (r.opt) { // {X ","}* -> X ("," X)* 
-          insert seq([arg, reg(seq([literal(r.sep), arg]), opt=true, many=true)]);
+        if (r.opt) { // {X ","}* -> (X ("," X)*)? 
+          insert reg(seq([arg, reg(seq([literal(r.sep), arg]), opt=true, many=true)]),opt=true,many=false);
         }
-        else {
+        else { // {X ","}* -> X ("," X)*
           insert seq([arg, reg(seq([literal(r.sep), arg]), opt=false, many=true)]);
         }
       }

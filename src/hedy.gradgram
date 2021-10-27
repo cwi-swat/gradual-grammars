@@ -36,6 +36,7 @@ Command
   
   | assign: var "is" text
   | assign_list: var "is" {text_list ","}+
+  | dummy: {text_list ","}*
   
 
 
