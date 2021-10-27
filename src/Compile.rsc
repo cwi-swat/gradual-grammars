@@ -12,6 +12,8 @@ loc levelLoc(str name, loc base, ALevel l)
   = base[file="<name>-<l.n>.lark"];
 
 
+void compile(loc l) = compile(load(l));
+
 void compile(start[Module] pt) = compile(implode(pt));
 
 @doc{Compile a gradual grammar to LARK files representing each level}

@@ -12,6 +12,9 @@ _WS: " "* -> _WS
 
 ListAccess: var  "at"  (index | random) -> list_access
 
+Condition: textwithoutspaces  "is"  textwithoutspaces  ("and"  condition)* -> is
+	| textwithoutspaces  "in"  var  ("and"  condition)* -> in
+
 Command: "forward"  (number | ListAccess | textwithoutspaces) -> forward
 	| "turn"  (list_access | textwithoutspaces) -> turn
 	| "ken"  var  "aan"  text  "toe" -> assign
@@ -19,12 +22,9 @@ Command: "forward"  (number | ListAccess | textwithoutspaces) -> forward
 	| (text_list  (","  text_list)*)? -> dummy
 	| "print"  (ListAccess | quoted_text | var_access)* -> print
 	| var  "is"  "ask"  (ListAccess | quoted_text | var_access) -> ask
-	| "if"  Condition  Command -> if
+	| "als"  Condition  "dan"  Command -> if
 	| "if"  Condition  Command  "else"  Command -> ifelse
 	| text -> invalid_space // error production
 	| textwithoutspaces  text? -> invalid // error production
 	| "print"  text -> print_nq // error production
 	| var  "is"  "as"  (ListAccess | textwithoutspaces | punctuation) -> ask_nq // error production
-
-Condition: textwithoutspaces  "is"  textwithoutspaces  ("and"  condition)* -> is
-	| textwithoutspaces  "in"  var  ("and"  condition)* -> in

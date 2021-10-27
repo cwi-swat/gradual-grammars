@@ -17,5 +17,8 @@ Command
   = assign: "ken" _2 "aan" _1 "toe"
   
   
+level 4
 
+Command
+  = if: "als" _ "dan" _
   
