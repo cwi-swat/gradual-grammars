@@ -1,0 +1,13 @@
+module HedyNL
+
+level 1
+
+Command
+  = print: "print" text "uit";
+  
+level 2
+
+Command
+  = assign: "ken" text "aan" var "toe";
+
+  

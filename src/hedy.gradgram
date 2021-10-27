@@ -1,0 +1,68 @@
+module Hedy
+
+import common.DIGIT
+import common.WS_INLINE
+import common.NEWLINE
+import common.SIGNED_INT -> NUMBER
+
+layout _WS = " "*
+
+level 1
+
+ID_START = idstart: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/
+ID_CONTINUE = idcontinue: ID_START | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/
+
+Prog = cmds: Command+
+
+Command 
+  = print:"print" text -> print
+  | ask: "ask" text
+  | echo: "echo" text
+  | forward: "forward" number
+  | turn: "turn" text
+  | @error invalid_space: text
+  | @error invalid: textwithoutspaces text?
+  
+
+level 2
+
+remove echo
+
+Command
+  = @override print: "print" (list_access | textwithoutspaces | punctuation)
+  | @override ask: var "is" "ask" (text_ask | punctuation) 
+  | @override forward: "forward" (number | ListAccess | textwithoutspaces)
+  | @override turn: "turn" (list_access | textwithoutspaces)
+  
+  | assign: var "is" text
+  | assign_list: var "is" {text_list ","}+
+  
+
+
+ListAccess
+  =  list_access: var "at" (index | random)
+  
+level 3
+
+
+Command
+  = @override print: "print" (ListAccess | quoted_text | var_access)*
+  | @override ask: var "is" "ask" (ListAccess | quoted_text | var_access)
+  | @error print_nq: "print" text
+  | @error ask_nq: var "is"  "as" (ListAccess | textwithoutspaces | punctuation)
+   
+  
+  
+level 4
+
+Command
+  = if: "if" Condition Command
+  | ifelse: "if" Condition Command "else" Command
+  
+Condition
+  = is: textwithoutspaces "is" textwithoutspaces ("and" condition)*
+  | in: textwithoutspaces "in" var ("and" condition)*
+  
+  
+  
+  
