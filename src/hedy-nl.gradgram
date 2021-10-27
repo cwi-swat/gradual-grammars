@@ -4,7 +4,6 @@ modifies "hedy.gradgram"
 
 level 1
 
-
 command
   = print: "print" _ "uit"
   | ask: "vraag" _

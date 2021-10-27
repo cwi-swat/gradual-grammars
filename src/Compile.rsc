@@ -29,6 +29,8 @@ void compile(AGrammar g) {
   println("LOG: compiling grammar <g.name>");
   ASymbol ws = nonterminal(g.ws);
   for (int i <- [0..size(g.levels)]) {
+    // this could be more efficient if the previously *merged* level
+    // acts as the base of the next level merge.
     ALevel m = merge(g.levels[0..i+1]);
     m = interleaveLayout(ws, normalize(m));
     println("LOG: level <g.levels[i].n>");
@@ -86,10 +88,16 @@ ALevel merge(list[ALevel] levels) {
        }
        for (AProd p <- r.prods) {
          if (p.override) {
-           // remove the "previous" one
-           theRule.prods = [ x | AProd x <- theRule.prods, x.label != p.label ];
+           if (int i <- [0..size(theRule.prods)], AProd x := theRule.prods[i], x.label == p.label) {
+             theRule.prods[i] = p;
+           }
+           else {
+             println("WARNING: trying to override non-existing base production labeled <p.label>");
+           }
          }
-         theRule.prods += [p];
+         else {
+           theRule.prods += [p];
+         }
        }
        // add back again.
        merged.rules += [theRule];
