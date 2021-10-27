@@ -21,15 +21,17 @@ void compile(AGrammar g) {
   
   if (g.base != "") {
     // assumes base grammar is in same directory.
-     AGrammar base = load(g.src[file=g.base]);
-     g = customize(base, g);
+    println("LOG: compiling grammar aspect with base <g.base>");
+    AGrammar base = load(g.src[file=g.base]);
+    g = customize(base, g);
   }
 
+  println("LOG: compile grammar <g.name>");
   ASymbol ws = nonterminal(g.ws);
   for (int i <- [0..size(g.levels)]) {
     ALevel m = merge(g.levels[0..i+1]);
     m = interleaveLayout(ws, normalize(m));
-    println("### LEVEL: <g.levels[i].n>");
+    println("LOG: compiling level <g.levels[i].n>");
     writeFile(levelLoc(g.name, g.src, g.levels[i]), pp(g, m));
   }
 }
@@ -96,13 +98,10 @@ ALevel merge(list[ALevel] levels) {
   return merged;
 }
 
+@doc{Customize a base production with a production template}
 AProd weave(AProd base, AProd custom) {
 
   list[ASymbol] weave(list[ASymbol] bs, list[ASymbol] cs) {
-    println("WEAVING:");
-    println("BASE: <bs>");
-    println("CUST: <cs>");
-    
     int lastArg = 0;
     list[ASymbol] lst = [];
     for (ASymbol s <- cs) {
@@ -121,16 +120,19 @@ AProd weave(AProd base, AProd custom) {
       else if (reg(seq(list[ASymbol] ss)) := s, reg(seq(list[ASymbol] bss)) := bs[lastArg]) {
         lst += [reg(seq(weave(bss, ss)), sep=s.sep, opt=s.opt, many=s.many)];      
       }
+      // todo: do the other nested symbols.
       else {
         println("WARNING: unsupported symbol in customizing production");
       }
     }
     return lst; 
   } 
+  
   return aprod(base.label, weave(base.symbols, custom.symbols), 
     error=base.error, override=base.override, binding=base.binding);
 }
 
+@doc{Weave production "aspects" into a base grammar}
 AGrammar customize(AGrammar base, AGrammar aspect) {
   for (ALevel l <- aspect.levels) {
     if (int i <- [0..size(base.levels)], ALevel bl := base.levels[i], bl.n == l.n) {
