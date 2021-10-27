@@ -10,10 +10,10 @@ Prog: Command+ -> cmds
 
 _WS: " "* -> _WS
 
-Command: "print"  text  "uit" -> print
-	| "vraag"  text -> ask
-	| "echo"  text -> echo
-	| "vooruit"  number -> forward
-	| "draai"  text -> turn
+Command: "print" _WS text _WS "uit" -> print
+	| "vraag" _WS text -> ask
+	| "echo" _WS text -> echo
+	| "vooruit" _WS number -> forward
+	| "draai" _WS text -> turn
 	| text -> invalid_space // error production
-	| textwithoutspaces  text? -> invalid // error production
+	| textwithoutspaces _WS text? -> invalid // error production

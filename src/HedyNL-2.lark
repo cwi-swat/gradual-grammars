@@ -10,14 +10,14 @@ Prog: Command+ -> cmds
 
 _WS: " "* -> _WS
 
-ListAccess: var  "at"  (index | random) -> list_access
+ListAccess: var _WS "at" _WS (index | random) -> list_access
 
-Command: "print"  (list_access | textwithoutspaces | punctuation) -> print
-	| var  "is"  "ask"  (text_ask | punctuation) -> ask
-	| "forward"  (number | ListAccess | textwithoutspaces) -> forward
-	| "turn"  (list_access | textwithoutspaces) -> turn
-	| "ken"  var  "aan"  text  "toe" -> assign
-	| var  "is"  (text_list  (","  text_list)+) -> assign_list
-	| (text_list  (","  text_list)*)? -> dummy
+Command: "print" _WS (list_access | textwithoutspaces | punctuation) -> print
+	| var _WS "is" _WS "ask" _WS (text_ask | punctuation) -> ask
+	| "forward" _WS (number | ListAccess | textwithoutspaces) -> forward
+	| "turn" _WS (list_access | textwithoutspaces) -> turn
+	| "ken" _WS var _WS "aan" _WS text _WS "toe" -> assign
+	| var _WS "is" _WS (text_list _WS ("," _WS text_list)+) -> assign_list
+	| (text_list _WS ("," _WS text_list)*)? -> dummy
 	| text -> invalid_space // error production
-	| textwithoutspaces  text? -> invalid // error production
+	| textwithoutspaces _WS text? -> invalid // error production

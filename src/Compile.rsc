@@ -18,7 +18,6 @@ void compile(start[Module] pt) = compile(implode(pt));
 
 @doc{Compile a gradual grammar to LARK files representing each level}
 void compile(AGrammar g) {
-  ASymbol ws = nonterminal(g.ws);
   
   if (g.base != "") {
     // assumes base grammar is in same directory.
@@ -26,6 +25,7 @@ void compile(AGrammar g) {
      g = customize(base, g);
   }
 
+  ASymbol ws = nonterminal(g.ws);
   for (int i <- [0..size(g.levels)]) {
     ALevel m = merge(g.levels[0..i+1]);
     m = interleaveLayout(ws, normalize(m));
