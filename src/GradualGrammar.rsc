@@ -17,7 +17,7 @@ start syntax Module = "module" Id name Directive* directives Level* levels;
 
 syntax Directive 
   = "import" QName Binding?
-  | "layout" Nonterminal "=" Symbol;
+  | "layout" Nonterminal "=" Sym;
 
 syntax QName = {Id "."}+;
 
@@ -31,9 +31,9 @@ syntax Label = @category="Constant" Id;
 
 syntax Nonterminal = @category="Identifier" Id;
 
-syntax Rule = Nonterminal "=" {Production "|"}+;
+syntax Rule = Nonterminal "=" {Prod "|"}+;
 
-syntax Production = Modifier* Label ":" Symbol* Binding?;
+syntax Prod = Modifier* Label ":" Sym* Binding?;
 
 syntax Binding = "-\>" Label; 
 
@@ -43,18 +43,18 @@ syntax Modifier
 
 lexical Id = [_a-zA-Z][_a-zA-Z0-9]* !>> [_a-zA-Z0-9];
 
-syntax Symbol 
+syntax Sym 
   = Nonterminal
   | Literal
   | @category="Variable" Regexp
-  | "(" Symbol* ")"
-  | "{" Symbol Literal "}" "*"
-  | "{" Symbol Literal "}" "+"
-  | Symbol "?"
-  | Symbol "+"
-  | Symbol "*"
-  > left alt: Symbol "|" Symbol
-  //> left seq: Symbol Symbol
+  | "(" Sym* ")"
+  | "{" Sym Literal "}" "*"
+  | "{" Sym Literal "}" "+"
+  | Sym "?"
+  | Sym "+"
+  | Sym "*"
+  > left alt: Sym "|" Sym
+  //> left seq: Sym Sym
   ;
   
 lexical Nat = [0-9]+ !>> [0-9];

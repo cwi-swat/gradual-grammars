@@ -8,9 +8,9 @@ import List;
 import AST;
 
 
-loc levelLoc(Id name, Level l) {
-  loc org = l@\loc[extension="lark"];
-  return org[file="<name>-<l.number>.lark"];
+loc levelLoc(str name, loc base, ALevel l) {
+  println("BASE: <base>");
+  return base[file="<name>-<l.n>.lark"];
 }
 
 void compile(start[Module] pt) {
@@ -21,7 +21,7 @@ void compile(start[Module] pt) {
     ALevel m = merge(g.levels[0..i+1]);
     m = interleaveLayout(ws, normalize(m));
     println("### LEVEL: <g.levels[i].n>");
-    println(pp(g, m));
+    writeFile(levelLoc(g.name, g.src, g.levels[i]), pp(g, m));
   }
   
 }

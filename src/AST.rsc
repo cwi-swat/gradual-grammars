@@ -3,8 +3,9 @@ module AST
 import GradualGrammar;
 import String;
 import List;
+import ParseTree;
 
-data AGrammar(str ws = "", map[str, str] literals = ())
+data AGrammar(str ws = "", map[str, str] literals = (), loc src = |file:///dummy|)
   = agrammar(str name, list[Import] imports, list[ALevel] levels);
   
 
@@ -29,51 +30,53 @@ data ASymbol
   | reg(ASymbol arg, str sep="", bool opt=false, bool many=true)
   ;
 
-  AGrammar implode(start[Module] pt) {
+
+AGrammar implode(start[Module] pt) {
   ds = [ <"<q>", ""> | (Directive)`import <QName q>` <- pt.top.directives ]
     +[ <"<q>", "<l>"> | (Directive)`import <QName q> -\> <Label l>` <- pt.top.directives ];
   
   ls = [ implode(l) | Level l <- pt.top.levels ];
   
   AGrammar g = agrammar("<pt.top.name>", ds, ls);
-  if ((Directive)`layout <Id x> = <Symbol s>` <- pt.top.directives) {
+  g.src = pt.src.top;
+  if ((Directive)`layout <Nonterminal x> = <Sym s>` <- pt.top.directives) {
     g.ws = "<x>";
     g.levels[0].rules += [arule("<x>", [aprod("<x>", [implode(s)])])];
   }
   return g;
 }
 
-ASymbol implode((Symbol)`<Nonterminal nt>`)
+ASymbol implode((Sym)`<Nonterminal nt>`)
   = nonterminal("<nt>");
   
-ASymbol implode((Symbol)`<Literal l>`)
+ASymbol implode((Sym)`<Literal l>`)
   = literal("<l>");
 
-ASymbol implode((Symbol)`<Regexp r>`)
+ASymbol implode((Sym)`<Regexp r>`)
   = regexp("<r>");
   
-ASymbol implode((Symbol)`(<Symbol* ss>)`) 
-  = seq([ implode(s) | Symbol s <- ss]);
+ASymbol implode((Sym)`(<Sym* ss>)`) 
+  = seq([ implode(s) | Sym s <- ss]);
 
 //ASymbol implode((Symbol)`<Symbol s1> <Symbol s2>`) 
 //  = seq(implode(s1), implode(s2));
 
-ASymbol implode((Symbol)`<Symbol s1> | <Symbol s2>`) 
+ASymbol implode((Sym)`<Sym s1> | <Sym s2>`) 
   = alt(implode(s1), implode(s2));
 
-ASymbol implode((Symbol)`{<Symbol s> <Literal l>}*`) 
+ASymbol implode((Sym)`{<Sym s> <Literal l>}*`) 
   = reg(implode(s), sep="<l>", opt=true);
   
-ASymbol implode((Symbol)`{<Symbol s> <Literal l>}+`) 
+ASymbol implode((Sym)`{<Sym s> <Literal l>}+`) 
   = reg(implode(s), sep="<l>", opt=false);
   
-ASymbol implode((Symbol)`<Symbol s>?`) 
+ASymbol implode((Sym)`<Sym s>?`) 
   = reg(implode(s), opt=true, many=false);
   
-ASymbol implode((Symbol)`<Symbol s>*`) 
+ASymbol implode((Sym)`<Sym s>*`) 
   = reg(implode(s), opt=true, many=true);
   
-ASymbol implode((Symbol)`<Symbol s>+`) 
+ASymbol implode((Sym)`<Sym s>+`) 
   = reg(implode(s), opt=false, many=true);
   
 
@@ -83,17 +86,17 @@ ALevel implode((Level)`level <Nat n> remove <{Label ","}+ ls> <Rule* rs>`)
 ALevel implode((Level)`level <Nat n> <Rule* rs>`)
   = alevel(toInt("<n>"), [ ],  [ implode(r) | Rule r <- rs ]);
   
-ARule implode((Rule)`<Nonterminal nt> = <{Production "|"}+ ps>`)
-  = arule("<nt>", [ implode(p) | Production p <- ps ]);
+ARule implode((Rule)`<Nonterminal nt> = <{Prod "|"}+ ps>`)
+  = arule("<nt>", [ implode(p) | Prod p <- ps ]);
 
-AProd implode((Production)`<Modifier* ms> <Label l>: <Symbol* ss>`)
+AProd implode((Prod)`<Modifier* ms> <Label l>: <Sym* ss>`)
   = implodeProd(ms, l, ss, "");
   
-AProd implode((Production)`<Modifier* ms> <Label l>: <Symbol* ss> -\> <Label b>`)
+AProd implode((Prod)`<Modifier* ms> <Label l>: <Sym* ss> -\> <Label b>`)
   = implodeProd(ms, l, ss, "<b>");
   
-AProd implodeProd(Modifier* ms, Label l, Symbol* ss, str binding) {
-  AProd p = aprod("<l>", [ implode(s) | Symbol s <- ss ] , binding=binding);
+AProd implodeProd(Modifier* ms, Label l, Sym* ss, str binding) {
+  AProd p = aprod("<l>", [ implode(s) | Sym s <- ss ] , binding=binding);
   if ((Modifier)`@override` <- ms) {
     p.override = true;
   }
