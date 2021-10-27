@@ -26,12 +26,12 @@ void compile(AGrammar g) {
     g = customize(base, g);
   }
 
-  println("LOG: compile grammar <g.name>");
+  println("LOG: compiling grammar <g.name>");
   ASymbol ws = nonterminal(g.ws);
   for (int i <- [0..size(g.levels)]) {
     ALevel m = merge(g.levels[0..i+1]);
     m = interleaveLayout(ws, normalize(m));
-    println("LOG: compiling level <g.levels[i].n>");
+    println("LOG: level <g.levels[i].n>");
     writeFile(levelLoc(g.name, g.src, g.levels[i]), pp(g, m));
   }
 }
@@ -147,7 +147,7 @@ AGrammar customize(AGrammar base, AGrammar aspect) {
 		     println("WARNING: no production labeled <p.label> in base grammar");           
            }
          }
-         // add back again.
+         // it add back again.
          bl.rules += [theRule];
        }
        else {

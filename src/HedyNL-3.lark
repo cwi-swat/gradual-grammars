@@ -6,20 +6,20 @@ ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/ -> idstart
 
 ID_CONTINUE: ID_START | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/ -> idcontinue
 
-Prog: Command+ -> cmds
+prog: command+ -> prog
 
 _WS: " "* -> _WS
 
-ListAccess: var _WS "at" _WS (index | random) -> list_access
+list_access: var _WS "at" _WS (index | random) -> list_access
 
-Command: "vooruit" _WS (number | ListAccess | textwithoutspaces) -> forward
+command: "vooruit" _WS (number | list_access | textwithoutspaces) -> forward
 	| "draai" _WS (list_access | textwithoutspaces) -> turn
 	| var _WS "krijgt" _WS text -> assign
 	| var _WS "is" _WS (text_list _WS ("," _WS text_list)+) -> assign_list
 	| (text_list _WS ("," _WS text_list)*)? -> dummy
-	| "print" _WS (ListAccess | quoted_text | var_access)* -> print
-	| var _WS "is" _WS "ask" _WS (ListAccess | quoted_text | var_access) -> ask
+	| "print" _WS (list_access | quoted_text | var_access)* -> print
+	| var _WS "is" _WS "ask" _WS (list_access | quoted_text | var_access) -> ask
 	| text -> invalid_space // error production
 	| textwithoutspaces _WS text? -> invalid // error production
 	| "print" _WS text -> print_nq // error production
-	| var _WS "is" _WS "as" _WS (ListAccess | textwithoutspaces | punctuation) -> ask_nq // error production
+	| var _WS "is" _WS "as" _WS (list_access | textwithoutspaces | punctuation) -> ask_nq // error production

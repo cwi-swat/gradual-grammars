@@ -6,11 +6,11 @@ ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/ -> idstart
 
 ID_CONTINUE: ID_START | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/ -> idcontinue
 
-Prog: Command+ -> cmds
+prog: command+ -> prog
 
 _WS: " "* -> _WS
 
-Command: "print" _WS text _WS "uit" -> print
+command: "print" _WS text _WS "uit" -> print
 	| "vraag" _WS text -> ask
 	| "echo" _WS text -> echo
 	| "vooruit" _WS number -> forward

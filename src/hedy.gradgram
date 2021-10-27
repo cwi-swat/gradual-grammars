@@ -12,9 +12,9 @@ level 1
 ID_START = idstart: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/
 ID_CONTINUE = idcontinue: ID_START | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/
 
-Prog = cmds: Command+
+prog = prog: command+
 
-Command 
+command 
   = print:"print" text -> print
   | ask: "ask" text
   | echo: "echo" text
@@ -28,10 +28,10 @@ level 2
 
 remove echo
 
-Command
+command
   = @override print: "print" (list_access | textwithoutspaces | punctuation)
   | @override ask: var "is" "ask" (text_ask | punctuation) 
-  | @override forward: "forward" (number | ListAccess | textwithoutspaces)
+  | @override forward: "forward" (number | list_access | textwithoutspaces)
   | @override turn: "turn" (list_access | textwithoutspaces)
   
   | assign: var "is" text
@@ -40,27 +40,27 @@ Command
   
 
 
-ListAccess
+list_access
   =  list_access: var "at" (index | random)
   
 level 3
 
 
-Command
-  = @override print: "print" (ListAccess | quoted_text | var_access)*
-  | @override ask: var "is" "ask" (ListAccess | quoted_text | var_access)
+command
+  = @override print: "print" (list_access | quoted_text | var_access)*
+  | @override ask: var "is" "ask" (list_access | quoted_text | var_access)
   | @error print_nq: "print" text
-  | @error ask_nq: var "is"  "as" (ListAccess | textwithoutspaces | punctuation)
+  | @error ask_nq: var "is"  "as" (list_access | textwithoutspaces | punctuation)
    
   
   
 level 4
 
-Command
-  = if: "if" Condition Command
-  | ifelse: "if" Condition Command "else" Command
+command
+  = if: "if" condition command
+  | ifelse: "if" condition command "else" command
   
-Condition
+condition
   = is: textwithoutspaces "is" textwithoutspaces ("and" condition)*
   | in: textwithoutspaces "in" var ("and" condition)*
   

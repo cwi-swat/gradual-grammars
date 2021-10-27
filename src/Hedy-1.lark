@@ -6,9 +6,9 @@ ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/ -> idstart
 
 ID_CONTINUE: ID_START | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/ -> idcontinue
 
-Prog: Command+ -> cmds
+prog: command+ -> prog
 
-Command: "print" _WS text -> print
+command: "print" _WS text -> print
 	| "ask" _WS text -> ask
 	| "echo" _WS text -> echo
 	| "forward" _WS number -> forward

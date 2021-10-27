@@ -6,15 +6,15 @@ ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/ -> idstart
 
 ID_CONTINUE: ID_START | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/ -> idcontinue
 
-Prog: Command+ -> cmds
+prog: command+ -> prog
 
 _WS: " "* -> _WS
 
-ListAccess: var _WS "at" _WS (index | random) -> list_access
+list_access: var _WS "at" _WS (index | random) -> list_access
 
-Command: "print" _WS (list_access | textwithoutspaces | punctuation) _WS "uit" -> print
+command: "print" _WS (list_access | textwithoutspaces | punctuation) _WS "uit" -> print
 	| var _WS "krijgt" _WS "vraag" _WS (text_ask | punctuation) -> ask
-	| "vooruit" _WS (number | ListAccess | textwithoutspaces) -> forward
+	| "vooruit" _WS (number | list_access | textwithoutspaces) -> forward
 	| "draai" _WS (list_access | textwithoutspaces) -> turn
 	| var _WS "krijgt" _WS text -> assign
 	| var _WS "is" _WS (text_list _WS ("," _WS text_list)+) -> assign_list

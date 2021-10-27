@@ -6,13 +6,13 @@ ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/ -> idstart
 
 ID_CONTINUE: ID_START | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/ -> idcontinue
 
-Prog: Command+ -> cmds
+prog: command+ -> prog
 
 _WS: " "* -> _WS
 
-Command: "print" _WS (list_access | textwithoutspaces | punctuation) -> print
+command: "print" _WS (list_access | textwithoutspaces | punctuation) -> print
 	| var _WS "is" _WS "ask" _WS (text_ask | punctuation) -> ask
-	| "forward" _WS (number | ListAccess | textwithoutspaces) -> forward
+	| "forward" _WS (number | list_access | textwithoutspaces) -> forward
 	| "turn" _WS (list_access | textwithoutspaces) -> turn
 	| var _WS "is" _WS text -> assign
 	| var _WS "is" _WS (text_list _WS ("," _WS text_list)+) -> assign_list
@@ -20,4 +20,4 @@ Command: "print" _WS (list_access | textwithoutspaces | punctuation) -> print
 	| text -> invalid_space // error production
 	| textwithoutspaces _WS text? -> invalid // error production
 
-ListAccess: var _WS "at" _WS (index | random) -> list_access
+list_access: var _WS "at" _WS (index | random) -> list_access

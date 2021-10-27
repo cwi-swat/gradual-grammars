@@ -5,7 +5,7 @@ modifies "hedy.gradgram"
 level 1
 
 
-Command
+command
   = print: "print" _ "uit"
   | ask: "vraag" _
   | forward: "vooruit" _
@@ -14,24 +14,24 @@ Command
   
 level 2
 
-Command
+command
   = print: "print" _ "uit"
   | ask: _ "krijgt" "vraag" _
   | assign: _ "krijgt" _
   | forward: "vooruit" _
   | turn: "draai" _ 
   
-Command
+command
   = print: "print" _ "uit"
   | ask: _ "krijgt" "vraag" _
   
 level 4
 
-Command
+command
   = if: "als" _ "dan" _
   | ifelse: "als" _ "dan" _ "anders" _
   
-Condition
+condition
   = is: _ "is" _ ("en" _)*
   | in: _ "in" _ ("en" _)*
     
