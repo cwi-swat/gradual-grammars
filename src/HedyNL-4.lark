@@ -12,13 +12,13 @@ _WS: " "* -> _WS
 
 list_access: var _WS "at" _WS (index | random) -> list_access
 
-command: "vooruit" _WS (number | list_access | textwithoutspaces) -> forward
+command: "print" _WS (list_access | quoted_text | var_access)* -> print
+	| var _WS "is" _WS "ask" _WS (list_access | quoted_text | var_access) -> ask
+	| "vooruit" _WS (number | list_access | textwithoutspaces) -> forward
 	| "draai" _WS (list_access | textwithoutspaces) -> turn
 	| var _WS "krijgt" _WS text -> assign
 	| var _WS "is" _WS (text_list _WS ("," _WS text_list)+) -> assign_list
 	| (text_list _WS ("," _WS text_list)*)? -> dummy
-	| "print" _WS (list_access | quoted_text | var_access)* -> print
-	| var _WS "is" _WS "ask" _WS (list_access | quoted_text | var_access) -> ask
 	| "als" _WS condition _WS "dan" _WS command -> if
 	| "als" _WS condition _WS "dan" _WS command _WS "anders" _WS command -> ifelse
 	| text -> invalid_space // error production

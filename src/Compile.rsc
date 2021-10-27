@@ -34,7 +34,7 @@ void compile(AGrammar g) {
     ALevel m = merge(g.levels[0..i+1]);
     m = interleaveLayout(ws, normalize(m));
     println("LOG: level <g.levels[i].n>");
-    writeFile(levelLoc(g.name, g.src, g.levels[i]), pp(g, m));
+    writeFile(levelLoc(g.name, g.src, g.levels[i]), toLark(g, m));
   }
 }
 

@@ -115,7 +115,7 @@ AProd implodeProd(Modifier* ms, Label l, Sym* ss, str binding) {
 }
 
 
-str pp(AGrammar g, ALevel l) {
+str toLark(AGrammar g, ALevel l) {
   str s = "";
   for (<str name, str binding> <- g.imports) {
     s += "%import <name>";
@@ -124,23 +124,23 @@ str pp(AGrammar g, ALevel l) {
     }
     s += "\n";
   }
-  s += pp(l);
+  s += toLark(l);
   return s;
 }
 
-str pp(ALevel l) = intercalate("\n", [ pp(r) | ARule r <- l.rules ]);
+str toLark(ALevel l) = intercalate("\n", [ toLark(r) | ARule r <- l.rules ]);
 
 
 list[AProd] errorsAtTheEnd(list[AProd] ps) 
   = [ p | AProd p <- ps, !p.error ] + [ p | AProd p <- ps, p.error ];
 
 // todo: sorting, error prods should be at end
-str pp(arule(str nt, list[AProd] prods))
-  = "<nt>: <intercalate("\n\t| ", [ pp(p) | AProd p <- errorsAtTheEnd(prods) ])>\n";
+str toLark(arule(str nt, list[AProd] prods))
+  = "<nt>: <intercalate("\n\t| ", [ toLark(p) | AProd p <- errorsAtTheEnd(prods) ])>\n";
 
 
-str pp(p:aprod(str l, list[ASymbol] ss)) {
-  str src = "<intercalate(" ", [ pp(s) | ASymbol s <- ss ])>";
+str toLark(p:aprod(str l, list[ASymbol] ss)) {
+  str src = "<intercalate(" ", [ toLark(s) | ASymbol s <- ss ])>";
   str b = p.binding != "" ? p.binding : p.label;
   src += " -\> <b>";
   if (p.error) {
@@ -149,14 +149,14 @@ str pp(p:aprod(str l, list[ASymbol] ss)) {
   return src;
 }
 
-str pp(nonterminal(str name)) = name;
-str pp(literal(str lit)) = lit;
-str pp(regexp(str re)) = re;
-str pp(seq(list[ASymbol] symbols)) = "(<intercalate(" ", [ pp(s) | ASymbol s <- symbols ])>)";
-str pp(alt(ASymbol lhs, ASymbol rhs)) = "<pp(lhs)> | <pp(rhs)>";
+str toLark(nonterminal(str name)) = name;
+str toLark(literal(str lit)) = lit;
+str toLark(regexp(str re)) = re;
+str toLark(seq(list[ASymbol] symbols)) = "(<intercalate(" ", [ toLark(s) | ASymbol s <- symbols ])>)";
+str toLark(alt(ASymbol lhs, ASymbol rhs)) = "<toLark(lhs)> | <toLark(rhs)>";
 
-str pp(s:reg(ASymbol arg)) {
-  str src = pp(arg);
+str toLark(s:reg(ASymbol arg)) {
+  str src = toLark(arg);
   if (s.opt, s.many) {
     src += "*";
   }
