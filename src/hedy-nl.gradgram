@@ -1,13 +1,21 @@
 module HedyNL
 
+modifies "hedy.gradgram"
+
 level 1
 
 Command
-  = print: "print" text "uit";
+  = print: "print" _ "uit"
+  | ask: "vraag" _
+  | forward: "vooruit" _
+  | turn: "draai" _
+  
   
 level 2
 
 Command
-  = assign: "ken" text "aan" var "toe";
+  = assign: "ken" _2 "aan" _1 "toe"
+  
+  
 
   

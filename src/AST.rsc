@@ -5,7 +5,7 @@ import String;
 import List;
 import ParseTree;
 
-data AGrammar(str ws = "", map[str, str] literals = (), loc src = |file:///dummy|)
+data AGrammar(str ws = "", str base = "", loc src = |file:///dummy|)
   = agrammar(str name, list[Import] imports, list[ALevel] levels);
   
 
@@ -28,8 +28,11 @@ data ASymbol
   | seq(list[ASymbol] symbols)
   | alt(ASymbol lhs, ASymbol rhs)
   | reg(ASymbol arg, str sep="", bool opt=false, bool many=true)
+  | placeholder(int pos = -1)
   ;
 
+
+AGrammar load(loc l) = implode(parse(#start[Module], l));
 
 AGrammar implode(start[Module] pt) {
   ds = [ <"<q>", ""> | (Directive)`import <QName q>` <- pt.top.directives ]
@@ -42,6 +45,9 @@ AGrammar implode(start[Module] pt) {
   if ((Directive)`layout <Nonterminal x> = <Sym s>` <- pt.top.directives) {
     g.ws = "<x>";
     g.levels[0].rules += [arule("<x>", [aprod("<x>", [implode(s)])])];
+  }
+  if ((Directive)`modifies <String base>` <- pt.top.directives) {
+    g.base = "<base>"[1..-1];
   }
   return g;
 }
@@ -76,7 +82,12 @@ ASymbol implode((Sym)`<Sym s>*`)
 ASymbol implode((Sym)`<Sym s>+`) 
   = reg(implode(s), opt=false, many=true);
   
-
+ASymbol implode((Sym)`_`)
+  = placeholder();
+  
+default ASymbol implode((Sym)`<Placeholder p>`)
+  = placeholder(pos = toInt("<p>"[1..]));
+  
 ALevel implode((Level)`level <Nat n> remove <{Label ","}+ ls> <Rule* rs>`)
   = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ],  [ implode(r) | Rule r <- rs ]);
 

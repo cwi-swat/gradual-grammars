@@ -17,7 +17,8 @@ start syntax Module = "module" Id name Directive* directives Level* levels;
 
 syntax Directive 
   = "import" QName Binding?
-  | "layout" Nonterminal "=" Sym;
+  | "layout" Nonterminal "=" Sym
+  | "modifies" String;
 
 syntax QName = {Id "."}+;
 
@@ -41,10 +42,14 @@ syntax Modifier
   = @category="MetaKeyword" "@override"
   | @category="MetaKeyword" "@error";
 
-lexical Id = [_a-zA-Z][_a-zA-Z0-9]* !>> [_a-zA-Z0-9];
+lexical Id 
+  = [_][a-zA-Z][_a-zA-Z0-9]* !>> [_a-zA-Z0-9]
+  | [a-zA-Z][_a-zA-Z0-9]* !>> [_a-zA-Z0-9]
+  ;
 
 syntax Sym 
   = Nonterminal
+  | Placeholder
   | Literal
   | @category="Variable" Regexp
   | "(" Sym* ")"
@@ -61,6 +66,7 @@ lexical Nat = [0-9]+ !>> [0-9];
 
 lexical String = [\"]![\"]*[\"];
 
+syntax Placeholder = "_"[0-9]* !>> [0-9];
 
 lexical Regexp = "/" RegexpChar* "/";
 

@@ -1,0 +1,19 @@
+%import common.DIGIT
+%import common.WS_INLINE
+%import common.NEWLINE
+%import common.SIGNED_INT -> NUMBER
+ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/ -> idstart
+
+ID_CONTINUE: ID_START | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/ -> idcontinue
+
+Prog: Command+ -> cmds
+
+_WS: " "* -> _WS
+
+Command: "print"  text  "uit" -> print
+	| "vraag"  text -> ask
+	| "echo"  text -> echo
+	| "vooruit"  number -> forward
+	| "draai"  text -> turn
+	| text -> invalid_space // error production
+	| textwithoutspaces  text? -> invalid // error production

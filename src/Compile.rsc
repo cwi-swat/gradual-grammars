@@ -11,9 +11,18 @@ import AST;
 loc levelLoc(str name, loc base, ALevel l)
   = base[file="<name>-<l.n>.lark"];
 
-void compile(start[Module] pt) {
-  AGrammar g = implode(pt);
+
+void compile(start[Module] pt) = compile(implode(pt));
+
+@doc{Compile a gradual grammar to LARK files representing each level}
+void compile(AGrammar g) {
   ASymbol ws = nonterminal(g.ws);
+  
+  if (g.base != "") {
+    // assumes base grammar is in same directory.
+     AGrammar base = load(g.src[file=g.base]);
+     g = customize(base, g);
+  }
 
   for (int i <- [0..size(g.levels)]) {
     ALevel m = merge(g.levels[0..i+1]);
@@ -21,8 +30,9 @@ void compile(start[Module] pt) {
     println("### LEVEL: <g.levels[i].n>");
     writeFile(levelLoc(g.name, g.src, g.levels[i]), pp(g, m));
   }
-  
 }
+
+
 
 
 @doc{Desugar separated list constructs}
@@ -84,6 +94,61 @@ ALevel merge(list[ALevel] levels) {
   return merged;
 }
 
+AProd weave(AProd base, AProd custom) {
+  AProd newProd = aprod(base.label, [], 
+    error=base.error, override=base.override, binding=base.binding);
+   
+  int lastArg = 0;
+  for (ASymbol s <- custom.symbols) {
+    if (s is literal) {
+      newProd.symbols += [s];
+    }
+    else if (s is placeholder) {
+      if (int i <- [lastArg..size(base.symbols)], !(base.symbols[i] is literal)) {
+        newProd.symbols += [base.symbols[i]];
+        lastArg = i + 1;
+      }
+      else {
+        println("WARNING: too many placeholders in custom production");
+      } 
+    }
+    else {
+      println("WARNING: symbol in custom production that is not literal or placeholder");
+    }
+  } 
+  return newProd;
+}
+
+AGrammar customize(AGrammar base, AGrammar aspect) {
+  for (ALevel l <- aspect.levels) {
+    if (int i <- [0..size(base.levels)], ALevel bl := base.levels[i], bl.n == l.n) {
+      for (ARule r <- l.rules) {
+       if (ARule theRule <- bl.rules, theRule.nt == r.nt) {
+         bl.rules = delete(bl.rules, indexOf(bl.rules, theRule));
+         for (AProd p <- r.prods) {
+		   if (int j <- [0..size(theRule.prods)], AProd p2 := theRule.prods[j], p2.label == p.label) {
+		     theRule.prods[j] = weave(p2, p);
+		   }
+		   else {
+		     println("WARNING: no production labeled <p.label> in base grammar");           
+           }
+         }
+         // add back again.
+         bl.rules += [theRule];
+       }
+       else {
+         println("WARNING: no existing rule for <r.nt> in base grammar");
+       }
+     }
+     base.levels[i] = bl;
+    }
+    else {
+      println("WARNING: no level <l.n> in base grammar."); 
+    }
+  }
+  
+  return base[name=aspect.name];
+}
 
 
 
