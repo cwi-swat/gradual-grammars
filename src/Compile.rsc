@@ -99,6 +99,10 @@ ALevel merge(list[ALevel] levels) {
 AProd weave(AProd base, AProd custom) {
 
   list[ASymbol] weave(list[ASymbol] bs, list[ASymbol] cs) {
+    println("WEAVING:");
+    println("BASE: <bs>");
+    println("CUST: <cs>");
+    
     int lastArg = 0;
     list[ASymbol] lst = [];
     for (ASymbol s <- cs) {
@@ -107,7 +111,7 @@ AProd weave(AProd base, AProd custom) {
       }
       else if (s is placeholder) {
         if (int i <- [lastArg..size(bs)], !(bs[i] is literal)) {
-          lst += [base.symbols[i]];
+          lst += [bs[i]];
           lastArg = i + 1;
         }
         else {

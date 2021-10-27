@@ -26,5 +26,5 @@ Command: "vooruit" _WS (number | ListAccess | textwithoutspaces) -> forward
 	| "print" _WS text -> print_nq // error production
 	| var _WS "is" _WS "as" _WS (ListAccess | textwithoutspaces | punctuation) -> ask_nq // error production
 
-Condition: textwithoutspaces _WS "is" _WS textwithoutspaces _WS ("en" _WS "is")* -> is
-	| textwithoutspaces _WS "in" _WS var _WS ("en" _WS "in")* -> in
+Condition: textwithoutspaces _WS "is" _WS textwithoutspaces _WS ("en" _WS condition)* -> is
+	| textwithoutspaces _WS "in" _WS var _WS ("en" _WS condition)* -> in
