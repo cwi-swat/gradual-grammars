@@ -9,7 +9,6 @@ import AST;
 
 
 loc levelLoc(str name, loc base, ALevel l) {
-  println("BASE: <base>");
   return base[file="<name>-<l.n>.lark"];
 }
 

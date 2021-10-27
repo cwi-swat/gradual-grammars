@@ -13,7 +13,7 @@ Command: "print" _WS text -> print
 	| "echo" _WS text -> echo
 	| "forward" _WS number -> forward
 	| "turn" _WS text -> turn
-	| text -> invalid_space
-	| textwithoutspaces _WS text? -> invalid
+	| text -> invalid_space // error production
+	| textwithoutspaces _WS text? -> invalid // error production
 
 _WS: " "* -> _WS

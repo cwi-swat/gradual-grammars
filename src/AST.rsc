@@ -58,9 +58,6 @@ ASymbol implode((Sym)`<Regexp r>`)
 ASymbol implode((Sym)`(<Sym* ss>)`) 
   = seq([ implode(s) | Sym s <- ss]);
 
-//ASymbol implode((Symbol)`<Symbol s1> <Symbol s2>`) 
-//  = seq(implode(s1), implode(s2));
-
 ASymbol implode((Sym)`<Sym s1> | <Sym s2>`) 
   = alt(implode(s1), implode(s2));
 
@@ -122,15 +119,22 @@ str pp(AGrammar g, ALevel l) {
 
 str pp(ALevel l) = intercalate("\n", [ pp(r) | ARule r <- l.rules ]);
 
+
+list[AProd] errorsAtTheEnd(list[AProd] ps) 
+  = [ p | AProd p <- ps, !p.error ] + [ p | AProd p <- ps, p.error ];
+
 // todo: sorting, error prods should be at end
 str pp(arule(str nt, list[AProd] prods))
-  = "<nt>: <intercalate("\n\t| ", [ pp(p) | AProd p <- prods ])>\n";
+  = "<nt>: <intercalate("\n\t| ", [ pp(p) | AProd p <- errorsAtTheEnd(prods) ])>\n";
 
 
 str pp(p:aprod(str l, list[ASymbol] ss)) {
   str src = "<intercalate(" ", [ pp(s) | ASymbol s <- ss ])>";
   str b = p.binding != "" ? p.binding : p.label;
   src += " -\> <b>";
+  if (p.error) {
+   src += " // error production";
+  }
   return src;
 }
 
@@ -153,7 +157,6 @@ str pp(s:reg(ASymbol arg)) {
   }
   return src;
 }  
-  
   
   
   
