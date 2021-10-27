@@ -14,11 +14,23 @@ Command
 level 2
 
 Command
-  = assign: "ken" _2 "aan" _1 "toe"
+  = print: "print" _ "uit"
+  | ask: _ "krijgt" "vraag" _
+  | assign: _ "krijgt" _
+  | forward: "vooruit" _
+  | turn: "draai" _ 
   
+Command
+  = print: "print" _ "uit"
+  | ask: _ "krijgt" "vraag" _
   
 level 4
 
 Command
   = if: "als" _ "dan" _
+  | ifelse: "als" _ "dan" _ "anders" _
   
+Condition
+  = is: _ "is" _ ("en" _)*
+  | in: _ "in" _ ("en" _)*
+    

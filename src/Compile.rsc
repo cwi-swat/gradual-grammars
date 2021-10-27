@@ -97,28 +97,34 @@ ALevel merge(list[ALevel] levels) {
 }
 
 AProd weave(AProd base, AProd custom) {
-  AProd newProd = aprod(base.label, [], 
-    error=base.error, override=base.override, binding=base.binding);
-   
-  int lastArg = 0;
-  for (ASymbol s <- custom.symbols) {
-    if (s is literal) {
-      newProd.symbols += [s];
-    }
-    else if (s is placeholder) {
-      if (int i <- [lastArg..size(base.symbols)], !(base.symbols[i] is literal)) {
-        newProd.symbols += [base.symbols[i]];
-        lastArg = i + 1;
+
+  list[ASymbol] weave(list[ASymbol] bs, list[ASymbol] cs) {
+    int lastArg = 0;
+    list[ASymbol] lst = [];
+    for (ASymbol s <- cs) {
+      if (s is literal) {
+        lst += [s];
+      }
+      else if (s is placeholder) {
+        if (int i <- [lastArg..size(bs)], !(bs[i] is literal)) {
+          lst += [base.symbols[i]];
+          lastArg = i + 1;
+        }
+        else {
+          println("WARNING: too many placeholders in custom production");
+        } 
+      }
+      else if (reg(seq(list[ASymbol] ss)) := s, reg(seq(list[ASymbol] bss)) := bs[lastArg]) {
+        lst += [reg(seq(weave(bss, ss)), sep=s.sep, opt=s.opt, many=s.many)];      
       }
       else {
-        println("WARNING: too many placeholders in custom production");
-      } 
+        println("WARNING: unsupported symbol in customizing production");
+      }
     }
-    else {
-      println("WARNING: symbol in custom production that is not literal or placeholder");
-    }
+    return lst; 
   } 
-  return newProd;
+  return aprod(base.label, weave(base.symbols, custom.symbols), 
+    error=base.error, override=base.override, binding=base.binding);
 }
 
 AGrammar customize(AGrammar base, AGrammar aspect) {
