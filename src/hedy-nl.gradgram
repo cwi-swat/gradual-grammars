@@ -7,7 +7,7 @@ level 1
 command
   = print: "print" _ "uit"
   | ask: "vraag" _
-  | forward: "vooruit" _
+  | forward: "vooruit" "dus" _ "met" "de" "geit"
   | turn: "draai" _
   
   

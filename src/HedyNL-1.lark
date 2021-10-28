@@ -13,7 +13,7 @@ _WS: " "* -> _WS
 command: "print" _WS text _WS "uit" -> print
 	| "vraag" _WS text -> ask
 	| "echo" _WS text -> echo
-	| "vooruit" _WS number -> forward
+	| "vooruit" _WS "dus" _WS number _WS "met" _WS "de" _WS "geit" -> forward
 	| "draai" _WS text -> turn
 	| text -> invalid_space // error production
 	| textwithoutspaces _WS text? -> invalid // error production

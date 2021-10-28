@@ -108,15 +108,23 @@ ALevel merge(list[ALevel] levels) {
 
 @doc{Customize a base production with a production template}
 AProd weave(AProd base, AProd custom) {
-
   list[ASymbol] weave(list[ASymbol] bs, list[ASymbol] cs) {
     int lastArg = 0;
     list[ASymbol] lst = [];
-    for (ASymbol s <- cs) {
-      if (s is literal) {
+    int i = 0;
+    outer: while (i < size(cs)) {
+      ASymbol s = cs[i];
+      while (s is literal) {
         lst += [s];
+        if (i < size(cs) - 1) {
+          i += 1;
+          s = cs[i];
+        }
+        else {
+          break outer;
+        }
       }
-      else if (s is placeholder) {
+      if (s is placeholder) {
         if (int i <- [lastArg..size(bs)], !(bs[i] is literal)) {
           lst += [bs[i]];
           lastArg = i + 1;
@@ -132,6 +140,7 @@ AProd weave(AProd base, AProd custom) {
       else {
         println("WARNING: unsupported symbol in customizing production");
       }
+      i += 1;
     }
     return lst; 
   } 
