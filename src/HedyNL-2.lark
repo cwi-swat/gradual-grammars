@@ -16,7 +16,7 @@ command: "print" _WS (list_access | textwithoutspaces | punctuation) _WS "uit" -
 	| var _WS "krijgt" _WS "vraag" _WS (text_ask | punctuation) -> ask
 	| "vooruit" _WS (number | list_access | textwithoutspaces) -> forward
 	| "draai" _WS (list_access | textwithoutspaces) -> turn
-	| "ken" _WS var _WS "toe" _WS "aan" _WS text -> assign_2_1
+	| "ken" _WS text _WS "toe" _WS "aan" _WS var -> assign_2_1
 	| var _WS "is" _WS (text_list _WS ("," _WS text_list)+) -> assign_list
 	| (text_list _WS ("," _WS text_list)*)? -> dummy
 	| text -> invalid_space // error production

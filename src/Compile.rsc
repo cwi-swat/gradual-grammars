@@ -108,7 +108,8 @@ ALevel merge(list[ALevel] levels) {
 
 @doc{Customize a base production with a production template}
 AProd weave(AProd base, AProd custom) {
-  list[ASymbol] placeholders = [];
+  // a "map" from fysical pos in base, to placeholder pos in custom.
+  lrel[int, int] reorder = [];
   
   list[ASymbol] weave(list[ASymbol] bs, list[ASymbol] cs) {
     int lastArg = 0;
@@ -127,7 +128,7 @@ AProd weave(AProd base, AProd custom) {
         }
       }
       if (s is placeholder) {
-        placeholders += [s];
+        reorder += [<lastArg, s.pos>];
         if (int i <- [lastArg..size(bs)], !(bs[i] is literal)) {
           lst += [bs[i]];
           lastArg = i + 1;
@@ -148,19 +149,37 @@ AProd weave(AProd base, AProd custom) {
     return lst; 
   } 
 
-  // NB: weave has side-effects in placeholder list.
+  // NB: weave has side-effects in reorder map.
   AProd result = aprod(base.label, weave(base.symbols, custom.symbols), 
     error=base.error, override=base.override, binding=base.binding);
   
-  if (p:placeholder() <- placeholders, p.pos >= 0) {
-    if (any(x <- placeholders, p.pos == -1)) {
-      println("WARNING: either all placeholders must have position or none");
-    }
-    else {
-      result.label = result.label +
-        intercalate("", [ "_<p.pos>" | ASymbol p <- placeholders ]);
-    }
-  }
+   // TODO: check that no pos is out of bounds and all pos are used and unique
+
+   // let's say there's a placeholder _2 at index 0
+   // this means that i have to find the second AST arg
+   // in the original production (let's say at index i)
+   // and put it at index 0;
+  
+   map[int, ASymbol] baseASTpos = ();
+   astPos = 1; // NB: one based!
+   for (ASymbol s <- base.symbols) {
+     if (!(s is literal)) {
+       baseASTpos[astPos] = s;
+       astPos += 1;
+     } 
+   }
+   
+   int i = 0;   
+   for (ASymbol s <- custom.symbols) {
+     if (s is placeholder, s.pos > 0) {
+       result.symbols[i] = baseASTpos[s.pos];
+     }
+     i += 1;
+   }
+   
+  result.label = result.label +
+    intercalate("", [ "_<s.pos>" | ASymbol s <- custom.symbols
+                        , s is placeholder, s.pos > 0 ]);
   
   return result;
   
