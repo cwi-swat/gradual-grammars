@@ -11,14 +11,14 @@ data AGrammar(str ws = "", str base = "", loc src = |file:///dummy|)
 
 alias Import = tuple[str name, str binding];
 
-data ALevel
+data ALevel(loc src = |file:///dummy|)
   = alevel(int n, list[str] remove, list[ARule] rules);
   
-data ARule
+data ARule(loc src = |file:///dummy|)
   = arule(str nt, list[AProd] prods)
   ;
   
-data AProd(bool error=false, bool override=false, str binding="")
+data AProd(bool error=false, bool override=false, str binding="", loc src = |file:///dummy|)
   = aprod(str label, list[ASymbol] symbols);
   
 data ASymbol
@@ -42,9 +42,9 @@ AGrammar implode(start[Module] pt) {
   
   AGrammar g = agrammar("<pt.top.name>", ds, ls);
   g.src = pt.src.top;
-  if ((Directive)`layout <Nonterminal x> = <Sym s>` <- pt.top.directives) {
+  if (d:(Directive)`layout <Nonterminal x> = <Sym s>` <- pt.top.directives) {
     g.ws = "<x>";
-    g.levels[0].rules += [arule("<x>", [aprod("<x>", [implode(s)])])];
+    g.levels[0].rules += [arule("<x>", [aprod("<x>", [implode(s)])], src=d.src)];
   }
   if ((Directive)`modifies <String base>` <- pt.top.directives) {
     g.base = "<base>"[1..-1];
@@ -88,22 +88,24 @@ ASymbol implode((Sym)`_`)
 default ASymbol implode((Sym)`<Placeholder p>`)
   = placeholder(pos = toInt("<p>"[1..]));
   
-ALevel implode((Level)`level <Nat n> remove <{Label ","}+ ls> <Rule* rs>`)
-  = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ],  [ implode(r) | Rule r <- rs ]);
+ALevel implode(t:(Level)`level <Nat n> remove <{Label ","}+ ls> <Rule* rs>`)
+  = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ],  
+       [ implode(r) | Rule r <- rs ], src=n.src);
 
 ALevel implode((Level)`level <Nat n> <Rule* rs>`)
-  = alevel(toInt("<n>"), [ ],  [ implode(r) | Rule r <- rs ]);
+  = alevel(toInt("<n>"), [ ],  [ implode(r) | Rule r <- rs ],
+       src=n.src);
   
-ARule implode((Rule)`<Nonterminal nt> = <{Prod "|"}+ ps>`)
-  = arule("<nt>", [ implode(p) | Prod p <- ps ]);
+ARule implode(r:(Rule)`<Nonterminal nt> = <{Prod "|"}+ ps>`)
+  = arule("<nt>", [ implode(p) | Prod p <- ps ], src=r.src);
 
-AProd implode((Prod)`<Modifier* ms> <Label l>: <Sym* ss>`)
-  = implodeProd(ms, l, ss, "");
+AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss>`)
+  = implodeProd(ms, l, ss, "", p.src);
   
-AProd implode((Prod)`<Modifier* ms> <Label l>: <Sym* ss> -\> <Label b>`)
-  = implodeProd(ms, l, ss, "<b>");
+AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss> -\> <Label b>`)
+  = implodeProd(ms, l, ss, "<b>", p.src);
   
-AProd implodeProd(Modifier* ms, Label l, Sym* ss, str binding) {
+AProd implodeProd(Modifier* ms, Label l, Sym* ss, str binding, loc src) {
   AProd p = aprod("<l>", [ implode(s) | Sym s <- ss ] , binding=binding);
   if ((Modifier)`@override` <- ms) {
     p.override = true;
@@ -111,7 +113,7 @@ AProd implodeProd(Modifier* ms, Label l, Sym* ss, str binding) {
   if ((Modifier)`@error` <- ms) {
     p.error = true;
   }
-  return p;
+  return p[src=src];
 }
 
 
