@@ -172,7 +172,12 @@ AProd weave(AProd base, AProd custom) {
    int i = 0;   
    for (ASymbol s <- custom.symbols) {
      if (s is placeholder, s.pos > 0) {
-       result.symbols[i] = baseASTpos[s.pos];
+       if (s.pos notin baseASTpos) {
+         println("WARNING: position <s.pos> placeholder could not be found in base production");
+       }
+       else {
+         result.symbols[i] = baseASTpos[s.pos];
+       }
      }
      i += 1;
    }
