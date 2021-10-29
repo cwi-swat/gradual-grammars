@@ -108,6 +108,8 @@ ALevel merge(list[ALevel] levels) {
 
 @doc{Customize a base production with a production template}
 AProd weave(AProd base, AProd custom) {
+  list[ASymbol] placeholders = [];
+  
   list[ASymbol] weave(list[ASymbol] bs, list[ASymbol] cs) {
     int lastArg = 0;
     list[ASymbol] lst = [];
@@ -125,6 +127,7 @@ AProd weave(AProd base, AProd custom) {
         }
       }
       if (s is placeholder) {
+        placeholders += [s];
         if (int i <- [lastArg..size(bs)], !(bs[i] is literal)) {
           lst += [bs[i]];
           lastArg = i + 1;
@@ -144,9 +147,23 @@ AProd weave(AProd base, AProd custom) {
     }
     return lst; 
   } 
-  
-  return aprod(base.label, weave(base.symbols, custom.symbols), 
+
+  // NB: weave has side-effects in placeholder list.
+  AProd result = aprod(base.label, weave(base.symbols, custom.symbols), 
     error=base.error, override=base.override, binding=base.binding);
+  
+  if (p:placeholder() <- placeholders, p.pos >= 0) {
+    if (any(x <- placeholders, p.pos == -1)) {
+      println("WARNING: either all placeholders must have position or none");
+    }
+    else {
+      result.label = result.label +
+        intercalate("", [ "_<p.pos>" | ASymbol p <- placeholders ]);
+    }
+  }
+  
+  return result;
+  
 }
 
 @doc{Weave production "aspects" into a base grammar}

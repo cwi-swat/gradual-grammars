@@ -10,15 +10,14 @@ command
   | forward: "vooruit" "dus" _ "met" "de" "geit"
   | turn: "draai" _
   
-  
 level 2
 
 command
   = print: "print" _ "uit"
   | ask: _ "krijgt" "vraag" _
-  | assign: _ "krijgt" _
+  | assign: "ken" _2 "toe" "aan" _1
   | forward: "vooruit" _
-  | turn: "draai" _ 
+  | turn: "draai" _
   
 command
   = print: "print" _ "uit"
