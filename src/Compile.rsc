@@ -8,6 +8,22 @@ import List;
 import AST;
 
 
+/*
+
+Idea: infer keyword translation from formatted examples (canonical/complete/etc.)
+
+- define formatter based on AST: the default one just formats
+- but it can be parameterized by helper functions which insert brackets
+  and/or meta notation, which allows the text to be generically parsed.
+- as a result we get a structure that can be matched against the concrete grammar
+  to derive a translated one.
+  
+Problem: how to "fix" implode in case of reordered things.
+
+
+*/
+
+
 loc levelLoc(str name, loc base, ALevel l)
   = base[file="<name>-<l.n>.lark"];
 

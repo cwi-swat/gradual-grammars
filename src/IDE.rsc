@@ -6,7 +6,7 @@ import GradualGrammar;
 import Message;
 import Compile;
 
-void main() {
+void setupIDE() {
   registerLanguage("Gradual Grammar", "gradgram", start[Module](str src, loc org) {
     return parse(#start[Module], src, org);
   });
