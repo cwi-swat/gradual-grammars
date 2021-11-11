@@ -23,10 +23,6 @@ Problem: how to "fix" implode in case of reordered things.
 
 */
 
-public loc HEDY = |project://gradual-grammars/src/hedy.gradgram|;
-
-public loc HEDY_NL = |project://gradual-grammars/src/hedy-nl.gradgram|;
-
 loc levelLoc(str name, loc base, ALevel l)
   = base[file="<name>-<l.n>.lark"];
 

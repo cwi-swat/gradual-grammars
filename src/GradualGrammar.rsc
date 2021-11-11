@@ -11,7 +11,7 @@ syntax Directive
 
 syntax QName = {Id "."}+;
 
-syntax Level = @Foldable "level" Nat number Keywords? Remove? Deprecate? Rule*;
+syntax Level = @Foldable "level" Nat number Remove? Deprecate? Rule*;
 
 syntax Remove = "remove" {Label ","}+;
 
