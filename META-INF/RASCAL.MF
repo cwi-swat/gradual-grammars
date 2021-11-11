@@ -3,6 +3,6 @@ Main-Function: main
 Courses: courses
 Project-Name: gradual-grammars
 Require-Libraries: |lib://rascal-core/|
-Main-Module: Plugin
+Main-Module: VSMain
 Source: src
 

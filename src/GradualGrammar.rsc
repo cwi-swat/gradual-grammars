@@ -11,7 +11,7 @@ syntax Directive
 
 syntax QName = {Id "."}+;
 
-syntax Level = @Foldable "level" Nat number Remove? Deprecate? Rule*;
+syntax Level = @Foldable "level" Nat number Remove? Deprecate? Rule* rules;
 
 syntax Remove = "remove" {Label ","}+;
 
@@ -23,9 +23,9 @@ syntax Label = @category="Constant" Id;
 
 syntax Nonterminal = @category="Identifier" Id;
 
-syntax Rule = Nonterminal "=" {Prod "|"}+;
+syntax Rule = Nonterminal nt "=" {Prod "|"}+ prods;
 
-syntax Prod = Modifier* Label ":" Sym* Binding?;
+syntax Prod = Modifier* Label label ":" Sym* syms Binding?;
 
 syntax Binding = "-\>" Label; 
 
