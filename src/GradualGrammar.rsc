@@ -11,9 +11,11 @@ syntax Directive
 
 syntax QName = {Id "."}+;
 
-syntax Level = @Foldable "level" Nat number Keywords? Remove? Rule*;
+syntax Level = @Foldable "level" Nat number Keywords? Remove? Deprecate? Rule*;
 
 syntax Remove = "remove" {Label ","}+;
+
+syntax Deprecate = "deprecate" {Label ","}+;
 
 syntax Literal = @category="StringLiteral" String;
 

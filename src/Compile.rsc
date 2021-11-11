@@ -23,6 +23,9 @@ Problem: how to "fix" implode in case of reordered things.
 
 */
 
+public loc HEDY = |project://gradual-grammars/src/hedy.gradgram|;
+
+public loc HEDY_NL = |project://gradual-grammars/src/hedy-nl.gradgram|;
 
 loc levelLoc(str name, loc base, ALevel l)
   = base[file="<name>-<l.n>.lark"];
@@ -92,7 +95,11 @@ ALevel merge(list[ALevel] levels) {
   for (ALevel l <- levels[1..]) {
     merged = visit (merged) {
       // assumes labels are globally unique, not just per nt
-      case ARule r => r[prods = [ p | p <- r.prods, p.label notin l.remove ]]
+      case ARule r: {
+        r.prods = [ p | p <- r.prods, p.label notin l.remove ];
+        r.prods = [ p[deprecatedAt =  p.label in l.deprecate ? l.n : -1]  | p <- r.prods ];
+        insert r;
+      }
     }
   
      for (ARule r <- l.rules) {
@@ -103,6 +110,10 @@ ALevel merge(list[ALevel] levels) {
          merged.rules = delete(merged.rules, indexOf(merged.rules, existing));
        }
        for (AProd p <- r.prods) {
+         if (p.label in l.deprecate) {
+           println("LOG: deprecating <p.label>");
+           p.deprecatedAt = l.n;
+         }
          if (p.override) {
            if (int i <- [0..size(theRule.prods)], AProd x := theRule.prods[i], x.label == p.label) {
              theRule.prods[i] = p;

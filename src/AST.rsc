@@ -12,13 +12,13 @@ data AGrammar(str ws = "", str base = "", loc src = |file:///dummy|)
 alias Import = tuple[str name, str binding];
 
 data ALevel(loc src = |file:///dummy|)
-  = alevel(int n, list[str] remove, list[ARule] rules);
+  = alevel(int n, list[str] remove, list[str] deprecate, list[ARule] rules);
   
 data ARule(loc src = |file:///dummy|)
   = arule(str nt, list[AProd] prods)
   ;
   
-data AProd(bool error=false, bool override=false, str binding="", loc src = |file:///dummy|)
+data AProd(bool error=false, bool override=false, int deprecatedAt = -1, str binding="", loc src = |file:///dummy|)
   = aprod(str label, list[ASymbol] symbols);
   
 data ASymbol
@@ -89,11 +89,19 @@ default ASymbol implode((Sym)`<Placeholder p>`)
   = placeholder(pos = toInt("<p>"[1..]));
   
 ALevel implode(t:(Level)`level <Nat n> remove <{Label ","}+ ls> <Rule* rs>`)
-  = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ],  
+  = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ], [], 
+       [ implode(r) | Rule r <- rs ], src=n.src);
+
+ALevel implode(t:(Level)`level <Nat n> remove <{Label ","}+ ls> deprecate <{Label ","}+ ds> <Rule* rs>`)
+  = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ], [ "<l>" | Label l <- ds ], 
+       [ implode(r) | Rule r <- rs ], src=n.src);
+
+ALevel implode(t:(Level)`level <Nat n> deprecate <{Label ","}+ ds> <Rule* rs>`)
+  = alevel(toInt("<n>"), [], [ "<l>" | Label l <- ds ], 
        [ implode(r) | Rule r <- rs ], src=n.src);
 
 ALevel implode((Level)`level <Nat n> <Rule* rs>`)
-  = alevel(toInt("<n>"), [ ],  [ implode(r) | Rule r <- rs ],
+  = alevel(toInt("<n>"), [], [], [ implode(r) | Rule r <- rs ],
        src=n.src);
   
 ARule implode(r:(Rule)`<Nonterminal nt> = <{Prod "|"}+ ps>`)
@@ -133,17 +141,22 @@ str toLark(AGrammar g, ALevel l) {
 str toLark(ALevel l) = intercalate("\n", [ toLark(r) | ARule r <- l.rules ]);
 
 
-list[AProd] errorsAtTheEnd(list[AProd] ps) 
-  = [ p | AProd p <- ps, !p.error ] + [ p | AProd p <- ps, p.error ];
+list[AProd] sortProductions(list[AProd] ps) 
+  = [ p | AProd p <- ps, !p.error, p.deprecatedAt < 0 ]
+  + [ p | AProd p <- ps, p.deprecatedAt >= 0 ]
+  + [ p | AProd p <- ps, p.error ];
 
 // todo: sorting, error prods should be at end
 str toLark(arule(str nt, list[AProd] prods))
-  = "<nt>: <intercalate("\n\t| ", [ toLark(p) | AProd p <- errorsAtTheEnd(prods) ])>\n";
+  = "<nt>: <intercalate("\n\t| ", [ toLark(p) | AProd p <- sortProductions(prods) ])>\n";
 
 
 str toLark(p:aprod(str l, list[ASymbol] ss)) {
   str src = "<intercalate(" ", [ toLark(s) | ASymbol s <- ss ])>";
-  str b = p.binding != "" ? p.binding : p.label;
+  str b = p.binding != "" ? p.binding : l;
+  if (p.deprecatedAt >= 0) {
+    b += "_DEPRECATED_AT_<p.deprecatedAt>";
+  }
   src += " -\> <b>";
   if (p.error) {
    src += " // error production";

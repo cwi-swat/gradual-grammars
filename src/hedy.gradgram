@@ -22,11 +22,10 @@ command
   | turn: "turn" text
   | @error invalid_space: text
   | @error invalid: textwithoutspaces text?
-  
 
 level 2
 
-remove echo
+deprecate echo
 
 command
   = @override print: "print" (list_access | textwithoutspaces | punctuation)
@@ -45,6 +44,7 @@ list_access
   
 level 3
 
+remove echo
 
 command
   = @override print: "print" (list_access | quoted_text | var_access)*

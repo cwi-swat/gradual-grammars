@@ -19,5 +19,6 @@ command: "print" _WS (list_access | textwithoutspaces | punctuation) _WS "uit" -
 	| "ken" _WS text _WS "toe" _WS "aan" _WS var -> assign_2_1
 	| var _WS "is" _WS (text_list _WS ("," _WS text_list)+) -> assign_list
 	| (text_list _WS ("," _WS text_list)*)? -> dummy
+	| "echo" _WS text -> echo_DEPRECATED_AT_2
 	| text -> invalid_space // error production
 	| textwithoutspaces _WS text? -> invalid // error production
