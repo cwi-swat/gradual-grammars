@@ -18,7 +18,7 @@ set[LanguageService] myLanguageContributor() = {
 void main() {
     registerLanguage(
         language(
-            pathConfig(),
+            pathConfig(srcs = [|std:///|, |project://gradual-grammars/src|]),
             "Gradual Grammar",
             "gradgram",
             "VSCode",

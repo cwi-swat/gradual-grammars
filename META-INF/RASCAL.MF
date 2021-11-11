@@ -2,7 +2,7 @@ Manifest-Version: 0.0.1
 Main-Function: main
 Courses: courses
 Project-Name: gradual-grammars
-Require-Libraries: 
+Require-Libraries: |lib://rascal-core/|
 Main-Module: Plugin
 Source: src
 
