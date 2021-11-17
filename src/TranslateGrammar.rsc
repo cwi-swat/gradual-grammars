@@ -3,11 +3,22 @@ module TranslateGrammar
 
 import Grammar;
 
+
+data Localizer 
+  = localizer(map[str, Pattern] mapping)
+  ;
+
+data Pattern
+  = pattern(str pattern);
+
+
+
+
 /*
 
 Motivation
 
-- LWB: batteries included
+- LWB: want batteries included
 - In Rascal customary to build language processors on top of concrete syntax trees
   and not ASTs
 - this preserves a high-fidelity link to the source text and provides access to comments etc.
@@ -19,7 +30,7 @@ Plan:
 
 - take a reference grammar (via #NT)
 - apply renaming/reordering aspect (map[str label,str pattern])
-- write to file with as Rascal grammar (via format);
+- write to file as Rascal grammar (via format);
 
 Then:
 
@@ -39,6 +50,13 @@ Ref grammar -> (weave) -> NL grammar
     |
     v
 Compile etc.
+
+NB: by implementing weave on parse trees 
+as well we get automatic translation
+(needed if programs travel across language boundaries).
+
+NB: together with Kogi we get internationalized block 
+languages as well.
 
 */
 

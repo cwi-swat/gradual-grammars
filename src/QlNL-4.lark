@@ -1,0 +1,39 @@
+STRING: /"[^"]"/ -> string
+
+ID: /[a-zA-Z][a-zA-Z0-9]*/ -> id
+
+form: "formulier"  ID  question* -> form
+
+or_expr: and_expr  "||"  or_expr -> or
+	| and_expr -> and
+
+bool: "waar" -> true
+	| "onwaar" -> false
+
+question: "vraag"  ID  "met"  STRING  ":"  type -> question_2_1_3
+	| "als"  "("  expr  ")"  "{"  question*  "}" -> ifThen
+	| "als"  "("  expr  ")"  question -> ifThenError // error production
+
+INT: /[0-9]+/ -> int
+
+primary: ID -> ref
+	| bool -> boolean
+	| INT -> int
+	| STRING -> str
+
+mul_expr: primary  "*"  mul_expr -> mul
+	| primary -> prim
+
+add_expr: mul_expr  "+"  add_expr -> plus
+	| mul_expr -> mul
+
+comp_expr: add_expr  "<"  add_expr -> lt
+	| add_expr -> add
+
+and_expr: comp_expr  "&&"  expr -> and
+	| primary -> prim
+	| comp_expr -> prim
+
+type: "waarheidswaarde" -> bool
+	| "tekst" -> string
+	| "getal" -> int
