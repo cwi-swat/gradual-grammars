@@ -5,15 +5,12 @@ modifies "QL.gradgram"
 level 1 // point: translation, placeholders, reordering
 
 type = bool: "waarheidswaarde"
-
 form = form: "formulier" _ _
-
 question = question: "vraag" _2 "met" _1 ":" _3
 
 level 2 // point: adding keywords "dan"
 
 bool = true: "waar" | false: "onwaar"
-
 question = ifThen: "als" "(" _ ")" "dan" _ 
 
 level 3 // maybe not relevant (not show?)
@@ -25,5 +22,4 @@ question
 level 4 // point: the rest stays the same
 
 type = string: "tekst" | int: "getal"
-
 
