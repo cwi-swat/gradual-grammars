@@ -53,49 +53,6 @@ list[DocumentSymbol] myOutliner(start[Module] input) {
     return [d];
 }
 
-
-
-/*
-data DocumentSymbol
-    = symbol(
-        str name,
-        DocumentSymbolKind kind,
-        loc range,
-        loc selection=range,
-        str detail="",
-        list[DocumentSymbol] children=[]
-    );
-
-data DocumentSymbolKind
-	= \file()
-	| \module()
-	| \namespace()
-	| \package()
-	| \class()
-	| \method()
-	| \property()
-	| \field()
-	| \constructor()
-	| \enum()
-	| \interface()
-	| \function()
-	| \variable()
-	| \constant()
-	| \string()
-	| \number()
-	| \boolean()
-	| \array()
-	| \object()
-	| \key()
-	| \null()
-	| \enumMember()
-	| \struct()
-	| \event()
-	| \operator()
-	| \typeParameter()
-    ;
-    */
-
 void main() {
     registerLanguage(
         language(
