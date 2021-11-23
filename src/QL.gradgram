@@ -5,21 +5,19 @@ level 1
 STRING = string: /"[^"]"/
 ID = id: /[a-zA-Z][a-zA-Z0-9]*/
 
+form = form: "form" ID question*
+question = question: "ask" STRING "into" ID  ":" type 
 type = bool: "boolean" 
 
-form = form: "form" ID question*
-
-question = question: "ask" STRING "into" ID  ":" type 
-
-level 2 // point: show extension
+level 2 // point: show extension with bool exprs 
 
 bool = true: "true" | false: "false"
-primary = ref: ID | boolean: bool
-and_expr = and: primary "&&" expr | prim: primary 
+
+question = ifThen: "if" "(" or_expr ")" question
+
 or_expr = or: and_expr "||" or_expr | and: and_expr
-
-question = ifThen: "if" "(" expr ")" question
-
+and_expr = and: primary "&&" and_expr | prim: primary 
+primary = ref: ID | boolean: bool
 
 level 3 // require grouping; point: override and error
 
@@ -27,17 +25,17 @@ question
     = @override ifThen: "if" "(" expr ")" "{" question* "}"
     | @error ifThenError: "if" "(" expr ")" question
 
-level 4 // more expressions
+level 4 // more expressions (don't show)
 
 type = string: "string" | int: "integer"
 
 INT = int: /[0-9]+/
 
-primary = int: INT | str: STRING
-mul_expr = mul: primary "*" mul_expr | prim: primary 
-add_expr = plus: mul_expr "+" add_expr | mul: mul_expr
+and_expr = @override and: comp_expr "&&" and_expr | comp: comp_expr 
 comp_expr = lt: add_expr "<" add_expr | add: add_expr
-and_expr = @override and: comp_expr "&&" expr | prim: comp_expr 
+add_expr = plus: mul_expr "+" add_expr | mul: mul_expr
+mul_expr = mul: primary "*" mul_expr | prim: primary 
+primary = int: INT | str: STRING
 
 
 

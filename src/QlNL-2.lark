@@ -2,21 +2,21 @@ STRING: /"[^"]"/ -> string
 
 ID: /[a-zA-Z][a-zA-Z0-9]*/ -> id
 
-type: "waarheidswaarde" -> bool
-
 form: "formulier"  ID  question* -> form
 
-primary: ID -> ref
-	| bool -> boolean
-
-and_expr: primary  "&&"  expr -> and
-	| primary -> prim
+type: "waarheidswaarde" -> bool
 
 or_expr: and_expr  "||"  or_expr -> or
 	| and_expr -> and
+
+and_expr: primary  "&&"  and_expr -> and
+	| primary -> prim
+
+primary: ID -> ref
+	| bool -> boolean
 
 bool: "waar" -> true
 	| "onwaar" -> false
 
 question: "vraag"  ID  "met"  STRING  ":"  type -> question_2_1_3
-	| "als"  "("  expr  ")"  "dan"  question -> ifThen
+	| "als"  "("  or_expr  ")"  "dan"  question -> ifThen
