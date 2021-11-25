@@ -8,9 +8,9 @@ lexical String =
 
 
 syntax Type =
-  stringType: "tekst" 
+  booleanType: "waarheidswaarde" 
   | integerType: "getal" 
-  | booleanType: "waarheidswaarde" 
+  | stringType: "tekst" 
   ;
 
 lexical Label =
@@ -32,8 +32,8 @@ lexical Integer =
   ;
 
 lexical StrChar =
-  ![\" \\] 
-  | [\\] [\" \\ b f n r t] 
+  [\\] [\" \\ b f n r t] 
+  | ![\" \\] 
   ;
 
 layout Standard  =
@@ -45,30 +45,30 @@ start syntax Form =
   ;
 
 syntax Question =
-  ifThenElse: "als"  "("  Expr cond  ")"  Question then  "anders"  Question els 
+  ifThen: "als"  Expr cond  "dan"  ":"  Question then  () !>> "anders" 
   | @Foldable group: "{"  Question* questions  "}" 
-  | ifThen: "als"  "("  Expr cond  ")"  Question then  () !>> "anders" 
-  | computed: Label label  Id var  ":"  Type type  "="  Expr expr 
   | question: "vraag"  Id var  "met"  Label label  ":"  Type type 
+  | ifThenElse: "als"  Expr cond  "dan"  ":"  Question then  "anders"  Question els 
+  | computed: Label label  Id var  ":"  Type type  "="  Expr expr 
   ;
 
 syntax Expr =
-  bracket "("  Expr  ")" 
-  | var: Id name 
+  var: Id name 
+  | bracket "("  Expr  ")" 
   | \value: Value 
   > not: "!"  Expr 
   > left 
-      ( left mul: Expr  "*"  Expr 
-      | left div: Expr  "/"  Expr 
+      ( left div: Expr  "/"  Expr 
+      | left mul: Expr  "*"  Expr 
       )
   > left 
       ( left add: Expr  "+"  Expr 
       | left sub: Expr  "-"  Expr 
       )
   > non-assoc 
-      ( non-assoc geq: Expr  "\>="  Expr 
+      ( non-assoc leq: Expr  "\<="  Expr 
+      | non-assoc geq: Expr  "\>="  Expr 
       | non-assoc gt: Expr  "\>"  Expr 
-      | non-assoc leq: Expr  "\<="  Expr 
       | non-assoc lt: Expr  "\<"  Expr 
       | non-assoc eq: Expr  "=="  Expr 
       | non-assoc neq: Expr  "!="  Expr 
@@ -86,8 +86,8 @@ lexical Whitespace =
   ;
 
 lexical WhitespaceOrComment =
-  whitespace: Whitespace 
-  | comment: Comment 
+  comment: Comment 
+  | whitespace: Whitespace 
   ;
 
 lexical Comment =

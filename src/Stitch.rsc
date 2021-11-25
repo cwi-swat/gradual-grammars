@@ -17,7 +17,7 @@ void main() {
   fabric = QL_NL_fabric::reflect();
   x = stitch(base, fabric, "NL");
   
-  g = \grammar({}, x.definitions);
+  g = \grammar({\start(sort("Form"))}, x.definitions);
   
   str moduleName = "QL_NL";
   
@@ -66,12 +66,13 @@ start[Form] testIt(Tree q) {
              return i;
            }
          } 
+         
          if (sort(placeholder) := s) {
-           if (placeholdersSeen + 1 == pos) {
+           placeholdersSeen += 1;
+           if (placeholdersSeen == pos) {
              //println("FOUND lone placeholder");
              return i;
            }
-           placeholdersSeen += 1;
         }
       }
       throw "Could not find placeholder corresponding to <pos>";
@@ -86,6 +87,10 @@ start[Form] testIt(Tree q) {
        return appl(prod(s, syms, {}), args);
     }
     
+    // TODO: we need to merge consecutive layout nodes (?)
+    // in case of keyword removal als (x) dan { -> if (x)  { (note the two spaces
+    // or maybe we don't...
+    
     int i = 0;
     int astPos = 0;
     for (Symbol s <- baseProd.symbols) {
@@ -93,17 +98,27 @@ start[Form] testIt(Tree q) {
         newArgs += [makeLitTree(s)];
       }
       else if (s is layouts) {
+        println("LAYOUT: <s> `<args[i]>`");
         newArgs += [args[i]];
       }
-      else if (conditional(empty(),_) := s) {
-        newArgs += [args[i]]; // TODO make this complete.
+      else if (conditional(empty(), set[Condition] _) := s) {
+        //println("CONDITIONAL: <s>");
+        //println("ARGS[<i>]: <args[i]>");
+        //println("ARGS[<i+1>]: `<args[i+1]>`");
+        //TODO make this complete;  I don't understand why this works...
+        //it looks like a conditional like this does not have an appl a
+        newArgs += [args[i]]; 
       }
       else { // AST arg
+        println("AST arg: <s>");
         int j = placeholderIndex(astPos + 1);
+        println("AST tree: <args[j]>");
         newArgs += [args[j]];
         astPos += 1;
       }
+      
       i += 1;
+      
     }
     
     return newArgs;

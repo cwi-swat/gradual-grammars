@@ -4,8 +4,8 @@ start syntax Form_NL = form: "formulier" X "{" X "}";
 
 syntax Question_NL
   = question: "vraag" X_2 "met" X_1 ":" X_3
-  | ifThen: "als" "(" X ")" X  () !>> "anders"
-  | ifThenElse: "als" "(" X ")" X "anders" X;
+  | ifThen: "als" X "dan" ":" X  () !>> "anders"
+  | ifThenElse: "als" X "dan" ":" X "anders" X;
   
 syntax Bool_NL = t: "waar" | f: "onwaar";
 
