@@ -129,6 +129,35 @@ ALevel merge(list[ALevel] levels) {
   return merged;
 }
 
+/*
+
+Pseudo code
+
+(assume all placeholders have 1-based suffixes
+
+symbols1 
+symbols2
+
+
+weave(Prod p1, Prod p2) {
+  assert p1.label == p2.label;
+  
+  list[Symbol] astKids = [ s | Symbol s <- p1.symbols, !(s is literal) ];
+  
+  Symbol lookup(Symbol s) {
+    if (s is placeholder) 
+      return astKids[s.pos - 1];
+    return s;
+  }
+
+  p2.symbols = [ lookup(s) | Symbol s <- p2.symbols ];
+  return p2;
+}
+
+
+*/
+
+
 @doc{Customize a base production with a production template}
 AProd weave(AProd base, AProd custom) {
   // a "map" from fysical pos in base, to placeholder pos in custom.

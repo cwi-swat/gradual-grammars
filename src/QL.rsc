@@ -14,7 +14,6 @@ syntax Question
   | ifThen: "if" "(" Expr cond ")" Question then () !>> "else"
   | ifThenElse: "if" "(" Expr cond ")" Question then "else" Question els
   | @Foldable group: "{" Question* questions "}"
-  | @Foldable @category="Comment" invisible: "(" Question* questions ")"
   ;
 
   

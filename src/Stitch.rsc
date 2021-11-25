@@ -5,7 +5,7 @@ import ParseTree;
 import Type;
 
 import QL;
-import QL_NL;
+import QL_NL_fabric;
 
 import IO;
 import String;
@@ -14,17 +14,111 @@ import lang::rascal::format::Grammar;
 
 void main() {
   base = QL::reflect();
-  fabric = QL_NL::reflect();
+  fabric = QL_NL_fabric::reflect();
   x = stitch(base, fabric, "NL");
   
   g = \grammar({}, x.definitions);
   
-  println(grammar2rascal(g, "bla"));
+  str moduleName = "QL_NL";
+  
+  rsc = grammar2rascal(g, moduleName);
+  println(rsc);
+  
+  writeFile(|project://gradual-grammars/src/<moduleName>.rsc|, rsc);
 }
 
 
-bool isLiteral(Symbol s) = (lit(_) := s) || (cilit(_) := s); //s is lit || s is cilit;
+bool isLiteral(Symbol s) = (lit(_) := s) || (cilit(_) := s); 
 
+
+start[Form] testIt(Tree q) {
+  type[start[Form]] base = QL::reflect();
+  type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
+  return unravel(base, fabric, q, "NL");
+}
+
+@doc{Transform a parse tree from parsing over a stitched grammar to a parse tree over the base grammar}
+&T<:Tree unravel(type[&T<:Tree] base, type[&U<:Tree] fabric, &U pt, str suffix, str placeholder = "X") {
+  
+  list[Tree] unravel(Production baseProd, Production fabricProd, list[Tree] args) {
+    /*
+    
+     Tree:  vraag leeftijd met "Leeftijd" : getal
+     Fabric: "vraag" X_2 "met" X_1 ":" X_3
+     Base:  "ask" String "into" Id ":" Type;
+  
+    */
+    
+    //println("BASE prod: <baseProd>");
+    //println("FABRIC prod: <fabricProd>");
+    
+    int placeholderIndex(int pos) {
+      //println("LOOKING FOR PLACEHOLDER at <pos>");
+      int placeholdersSeen = 0;
+      for (int i <- [0,2..size(fabricProd.symbols)]) {
+         Symbol s = fabricProd.symbols[i];
+         //println("SYMBOL @ <i>: <s>");
+         
+         if (sort(/<placeholder>_<x:[0-9]+>/) := s) {
+           placeholdersSeen += 1;
+           if (toInt(x) == pos) {
+             //println("FOUND indexed placeholder");
+             return i;
+           }
+         } 
+         if (sort(placeholder) := s) {
+           if (placeholdersSeen + 1 == pos) {
+             //println("FOUND lone placeholder");
+             return i;
+           }
+           placeholdersSeen += 1;
+        }
+      }
+      throw "Could not find placeholder corresponding to <pos>";
+    }
+    
+    list[Tree] newArgs = [];
+    
+    Tree makeLitTree(Symbol s) {
+       list[Symbol] syms = [ \char-class([range(c, c)]) | int c <- chars(s.string) ];
+       list[Tree] args = [ char(c) | int c <- chars(s.string) ];
+       
+       return appl(prod(s, syms, {}), args);
+    }
+    
+    int i = 0;
+    int astPos = 0;
+    for (Symbol s <- baseProd.symbols) {
+      if (isLiteral(s)) {
+        newArgs += [makeLitTree(s)];
+      }
+      else if (s is layouts) {
+        newArgs += [args[i]];
+      }
+      else if (conditional(empty(),_) := s) {
+        newArgs += [args[i]]; // TODO make this complete.
+      }
+      else { // AST arg
+        int j = placeholderIndex(astPos + 1);
+        newArgs += [args[j]];
+        astPos += 1;
+      }
+      i += 1;
+    }
+    
+    return newArgs;
+  }
+  
+  return visit (pt) {
+    case t:appl(prod(s:label(str l, sort(str nt)), _, _), list[Tree] args) 
+      => appl(bp, unravel(bp, fp, args))
+      
+      // not the most efficient way of looking up prods...
+      when /bp:prod(s, _, _) := base.definitions, // NB: syms can be different
+          // the template prod with the same label but suffixed sortname
+         /fp:prod(label(l, sort(/<nt>_<suffix>/)), _, _) := fabric.definitions  
+  } 
+}
 
 type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str placeholder = "X") {
   bdefs = base.definitions;
@@ -38,7 +132,7 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
     if (sort(placeholder) := s) {
       return 0; // consecutive
     }
-    return -1;
+    return -1; // not a placeholder
   }
   
   
@@ -50,10 +144,15 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
       return for (Symbol s <- fss) {
         switch (placeholderPos(s)) {
           case 0: {
+            // NB: assumes that all placeholders are consecutive
+            // (no mixing of X and X_i)
             append astArgs[curArg];
             curArg += 1;
           }
+          
+          // Not a placeholder
           case -1: append s;
+          
           default: append astArgs[placeholderPos(s) - 1];
         } 
       }
@@ -81,14 +180,15 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
   
   
   return visit (base) {
+    // keywords are simply overruled
     case choice(s:keywords(str kw), set[Production] _)
       => choice(s, fdefs[keywords("<kw>_<suffix>")].alternatives)
-    case c:choice(s:sort(str nt), set[Production] ps): {
-      Symbol fnt = sort("<nt>_<suffix>");
-      if (fnt in fdefs) {
-        insert choice(s, weave(ps, fdefs[fnt].alternatives));
-      }
-    }
+
+    case c:choice(s:sort(str nt), set[Production] ps) 
+      => choice(s, weave(ps, fdefs[fnt].alternatives))
+      when 
+        Symbol fnt := sort("<nt>_<suffix>"),
+        fnt in fdefs
   } 
 
 } 

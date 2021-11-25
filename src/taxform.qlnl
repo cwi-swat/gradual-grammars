@@ -1,0 +1,12 @@
+formulier belastingDienst { 
+  vraag huisVerkocht met "Heb je een huis verkocht in 2020?": waarheidswaarde
+  vraag huisGekocht met "Heb je een huis verkocht in 2020?" : waarheidswaarde
+  vraag hebJeEenLening met "Heb je een lening?" : waarheidswaarde
+
+  als (huisVerkocht) {
+    vraag schuld met "Wat is je schuld van het verkochte huis?": getal
+    vraag verkoopPrijs met "Wat was de verkoopprijs?": getal
+    "De rest waarde is:" restWaarde: getal = 
+      verkoopPrijs - schuld 
+  }
+} 
