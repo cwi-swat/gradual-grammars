@@ -18,9 +18,9 @@ lexical Label =
   ;
 
 syntax Value =
-  Integer 
+  Bool 
   | String 
-  | Bool 
+  | Integer 
   ;
 
 lexical Id =
@@ -31,9 +31,19 @@ lexical Integer =
   [\-]? [0-9]+ !>> [0-9] 
   ;
 
+keyword Reserved =
+  "onwaar" 
+  | "waar" 
+  ;
+
+syntax Bool =
+  f: "onwaar" 
+  | t: "waar" 
+  ;
+
 lexical StrChar =
-  [\\] [\" \\ b f n r t] 
-  | ![\" \\] 
+  ![\" \\] 
+  | [\\] [\" \\ b f n r t] 
   ;
 
 layout Standard  =
@@ -45,33 +55,33 @@ start syntax Form =
   ;
 
 syntax Question =
-  ifThen: "als"  Expr cond  "dan"  ":"  Question then  () !>> "anders" 
+  question: "vraag"  Id var  "met"  Label label  ":"  Type type 
+  | ifThen: "als"  Expr cond  "dan"  ":"  Question then  () !>> "anders" 
   | @Foldable group: "{"  Question* questions  "}" 
-  | question: "vraag"  Id var  "met"  Label label  ":"  Type type 
   | ifThenElse: "als"  Expr cond  "dan"  ":"  Question then  "anders"  Question els 
   | computed: Label label  Id var  ":"  Type type  "="  Expr expr 
   ;
 
 syntax Expr =
-  var: Id name 
+  \value: Value 
+  | var: Id name 
   | bracket "("  Expr  ")" 
-  | \value: Value 
   > not: "!"  Expr 
   > left 
-      ( left div: Expr  "/"  Expr 
-      | left mul: Expr  "*"  Expr 
+      ( left mul: Expr  "*"  Expr 
+      | left div: Expr  "/"  Expr 
       )
   > left 
-      ( left add: Expr  "+"  Expr 
-      | left sub: Expr  "-"  Expr 
+      ( left sub: Expr  "-"  Expr 
+      | left add: Expr  "+"  Expr 
       )
   > non-assoc 
-      ( non-assoc leq: Expr  "\<="  Expr 
+      ( non-assoc neq: Expr  "!="  Expr 
       | non-assoc geq: Expr  "\>="  Expr 
       | non-assoc gt: Expr  "\>"  Expr 
+      | non-assoc leq: Expr  "\<="  Expr 
       | non-assoc lt: Expr  "\<"  Expr 
       | non-assoc eq: Expr  "=="  Expr 
-      | non-assoc neq: Expr  "!="  Expr 
       )
   > left 
       ( left and: Expr  "&&"  Expr 
@@ -86,20 +96,10 @@ lexical Whitespace =
   ;
 
 lexical WhitespaceOrComment =
-  comment: Comment 
-  | whitespace: Whitespace 
+  whitespace: Whitespace 
+  | comment: Comment 
   ;
 
 lexical Comment =
   @lineComment @category="Comment" "//" ![\n]*$ 
-  ;
-
-keyword Keywords =
-  "waar" 
-  | "onwaar" 
-  ;
-
-syntax Bool =
-  f: "onwaar" 
-  | t: "waar" 
   ;

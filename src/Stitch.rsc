@@ -31,11 +31,121 @@ void main() {
 bool isLiteral(Symbol s) = (lit(_) := s) || (cilit(_) := s); 
 
 
+start[Form] testIt(str form) {
+  type[start[Form]] base = QL::reflect();
+  type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
+  type[start[Form]] st = stitch(base, fabric, "NL");
+  start[Form] f = parse(st, form);
+  return unravel(base, fabric, f, "NL");
+}
+
 start[Form] testIt(Tree q) {
   type[start[Form]] base = QL::reflect();
   type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
   return unravel(base, fabric, q, "NL");
 }
+
+Tree astAt(list[Tree] args, int i) {
+   asts = [ a | Tree a <- args, !isLiteral(a.prod.def), !(a.prod.def is layouts) ];
+   return asts[i];
+}
+
+// assumes only numbered placeholders in fabric.
+list[Tree] match(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str prefix) {
+  assert size(fabric) == size(args);
+  
+  list[Tree] newArgs = [];
+  
+  
+  list[Symbol] normalizePlaceholders(list[Symbol] ss) {
+    int i = 0;
+    return visit (fabric) {
+      case sort(prefix): {
+        i += 1;
+        insert(sort("<prefix>_<i>"));
+      }
+    }
+  }
+  
+  fabric = normalizePlaceholders(fabric);
+  println("FABRIC: <fabric>");
+  
+  map[int, int] reorder = ();
+  
+  int i = 0;
+  int j = 0;
+  
+  Tree findNextLayout() {
+    foundLayout = false;
+    lastWasLayout = false;
+    Tree theLayout;   
+
+    while (j < size(fabric)) {
+      println("ARGS[<j>]: <args[j]>");
+    
+      if (isLiteral(fabric[j])) {
+        println("SKIPPING literal: <args[j]>");
+      }
+      else if (fabric[j] is layouts) {
+        println("ADDING layout: <args[j]>");
+        return args[j];
+      }
+      else {
+         break;
+	  }         
+      j += 1;
+    }
+    throw "cannot happen";
+  }
+  
+  Tree findNextAST() {
+     while (j < size(fabric), isLiteral(fabric[j]) || (fabric[j] is layouts)) {
+        println("skipping FABRIC[<j>] = <fabric[j]>");
+        j += 1;
+     }
+     println("FOUND AST: <args[j]>");
+     return args[j];
+  }
+  
+  while (i < size(base)) {
+    Symbol s = base[i];
+    println("#### NEED: <s>");
+    reorder[i] = 0; // default init
+    
+    if (isLiteral(s)) {
+      newArgs += [makeLitTree(s)];
+    }
+    else if (s is layouts) {
+      newArgs += findNextLayout();
+    }
+    else {
+      newArgs += findNextAST();
+      reorder[i] = placeholderPos(fabric[j], prefix);
+      j += 1;
+    }
+
+    i += 1;   
+  }  
+  
+  println("REORDER: <reorder>");
+  
+  Tree lookup(int i) {
+    if (reorder[i] > 0) {
+      return astAt(newArgs, reorder[i] - 1);
+    }
+    return newArgs[i];
+  }
+  
+  return [ lookup(i) | int i <- [0..size(newArgs)] ];
+}
+
+Tree makeLitTree(Symbol s) {
+   list[Symbol] syms = [ \char-class([range(c, c)]) | int c <- chars(s.string) ];
+   list[Tree] args = [ char(c) | int c <- chars(s.string) ];
+   
+   return appl(prod(s, syms, {}), args);
+}
+
 
 @doc{Transform a parse tree from parsing over a stitched grammar to a parse tree over the base grammar}
 &T<:Tree unravel(type[&T<:Tree] base, type[&U<:Tree] fabric, &U pt, str suffix, str placeholder = "X") {
@@ -49,77 +159,7 @@ start[Form] testIt(Tree q) {
   
     */
     
-    //println("BASE prod: <baseProd>");
-    //println("FABRIC prod: <fabricProd>");
-    
-    int placeholderIndex(int pos) {
-      //println("LOOKING FOR PLACEHOLDER at <pos>");
-      int placeholdersSeen = 0;
-      for (int i <- [0,2..size(fabricProd.symbols)]) {
-         Symbol s = fabricProd.symbols[i];
-         //println("SYMBOL @ <i>: <s>");
-         
-         if (sort(/<placeholder>_<x:[0-9]+>/) := s) {
-           placeholdersSeen += 1;
-           if (toInt(x) == pos) {
-             //println("FOUND indexed placeholder");
-             return i;
-           }
-         } 
-         
-         if (sort(placeholder) := s) {
-           placeholdersSeen += 1;
-           if (placeholdersSeen == pos) {
-             //println("FOUND lone placeholder");
-             return i;
-           }
-        }
-      }
-      throw "Could not find placeholder corresponding to <pos>";
-    }
-    
-    list[Tree] newArgs = [];
-    
-    Tree makeLitTree(Symbol s) {
-       list[Symbol] syms = [ \char-class([range(c, c)]) | int c <- chars(s.string) ];
-       list[Tree] args = [ char(c) | int c <- chars(s.string) ];
-       
-       return appl(prod(s, syms, {}), args);
-    }
-    
-    // TODO: we need to merge consecutive layout nodes (?)
-    // in case of keyword removal als (x) dan { -> if (x)  { (note the two spaces
-    // or maybe we don't...
-    
-    int i = 0;
-    int astPos = 0;
-    for (Symbol s <- baseProd.symbols) {
-      if (isLiteral(s)) {
-        newArgs += [makeLitTree(s)];
-      }
-      else if (s is layouts) {
-        println("LAYOUT: <s> `<args[i]>`");
-        newArgs += [args[i]];
-      }
-      else if (conditional(empty(), set[Condition] _) := s) {
-        //println("CONDITIONAL: <s>");
-        //println("ARGS[<i>]: <args[i]>");
-        //println("ARGS[<i+1>]: `<args[i+1]>`");
-        //TODO make this complete;  I don't understand why this works...
-        //it looks like a conditional like this does not have an appl a
-        newArgs += [args[i]]; 
-      }
-      else { // AST arg
-        println("AST arg: <s>");
-        int j = placeholderIndex(astPos + 1);
-        println("AST tree: <args[j]>");
-        newArgs += [args[j]];
-        astPos += 1;
-      }
-      
-      i += 1;
-      
-    }
+    list[Tree] newArgs = match(baseProd.symbols, fabricProd.symbols, args, placeholder);
     
     return newArgs;
   }
@@ -135,20 +175,22 @@ start[Form] testIt(Tree q) {
   } 
 }
 
+int placeholderPos(Symbol s, str prefix) {
+    if (sort(/<prefix>_<pos:[0-9]+>/) := s) {
+      return toInt(pos); // 1-based
+    }
+    if (sort(prefix) := s) {
+      return 0; // consecutive
+    }
+    return -1; // not a placeholder
+}
+
+
 type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str placeholder = "X") {
   bdefs = base.definitions;
   fdefs = fabric.definitions;
   
   
-  int placeholderPos(Symbol s) {
-    if (sort(/<placeholder>_<pos:[0-9]+>/) := s) {
-      return toInt(pos); // 1-based
-    }
-    if (sort(placeholder) := s) {
-      return 0; // consecutive
-    }
-    return -1; // not a placeholder
-  }
   
   
   set[Production] weave(set[Production] ps, set[Production] fs) {
@@ -157,7 +199,7 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
       list[Symbol] astArgs = [ s | Symbol s <- bss, !isLiteral(s), !(s is layouts) ];
       int curArg = 0;
       return for (Symbol s <- fss) {
-        switch (placeholderPos(s)) {
+        switch (placeholderPos(s, placeholder)) {
           case 0: {
             // NB: assumes that all placeholders are consecutive
             // (no mixing of X and X_i)
@@ -168,7 +210,7 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
           // Not a placeholder
           case -1: append s;
           
-          default: append astArgs[placeholderPos(s) - 1];
+          default: append astArgs[placeholderPos(s, placeholder) - 1];
         } 
       }
     }
@@ -199,6 +241,10 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
     case choice(s:keywords(str kw), set[Production] _)
       => choice(s, fdefs[keywords("<kw>_<suffix>")].alternatives)
 
+ 	// TODO: add priority etc.
+ 	//\priority(Symbol def, list[Production] choices) // <5>
+     // \associativity(Symbol def, Associativity \assoc, set[Production] alternatives) // <6>
+ 	
     case c:choice(s:sort(str nt), set[Production] ps) 
       => choice(s, weave(ps, fdefs[fnt].alternatives))
       when 

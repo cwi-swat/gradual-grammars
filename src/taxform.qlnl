@@ -1,6 +1,6 @@
 formulier belastingDienst { 
   vraag huisVerkocht met "Heb je een huis verkocht in 2020?": waarheidswaarde
-  vraag huisGekocht met "Heb je een huis verkocht in 2020?" : waarheidswaarde
+  vraag huisGekocht met "Heb je een huis gekocht in 2020?" : waarheidswaarde
   vraag hebJeEenLening met "Heb je een lening?" : waarheidswaarde
 
   als huisVerkocht dan: {

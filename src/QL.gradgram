@@ -2,7 +2,7 @@ module QL
 
 level 1
 
-STRING = string: /"[^"]"/
+STRING = string: /"[^"]*"/
 ID = id: /[a-zA-Z][a-zA-Z0-9]*/
 
 form = form: "form" ID question*

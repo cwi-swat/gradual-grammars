@@ -53,7 +53,7 @@ syntax Expr
   > left or: Expr "||" Expr
   ;
   
-keyword Keywords = "true" | "false" ;
+keyword Reserved = "true" | "false" ;
 
 lexical Label = @category="Constant" label: String; 
   

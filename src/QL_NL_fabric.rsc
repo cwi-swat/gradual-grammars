@@ -9,7 +9,7 @@ syntax Question_NL
   
 syntax Bool_NL = t: "waar" | f: "onwaar";
 
-keyword Keywords_NL = "waar" | "onwaar" ;
+keyword Reserved_NL = "waar" | "onwaar" ;
 
 syntax Type_NL
   = booleanType: "waarheidswaarde" 
