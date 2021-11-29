@@ -75,10 +75,15 @@ list[Tree] match(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str pr
   int i = 0;
   int j = 0;
   
+  void skipLiteralIfAny() {
+    if (j < size(fabric), isLiteral(fabric[j])) {
+      println("SKIPPING matching literal: <fabric[j]>");
+      j += 1;
+    }
+  }
+  
   Tree findNextLayout() {
     foundLayout = false;
-    lastWasLayout = false;
-    Tree theLayout;   
 
     while (j < size(fabric)) {
       println("ARGS[<j>]: <args[j]>");
@@ -92,8 +97,9 @@ list[Tree] match(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str pr
       }
       else {
          break;
-	  }         
-      j += 1;
+	  }
+	  
+	  j += 1;         
     }
     throw "cannot happen";
   }
@@ -114,6 +120,7 @@ list[Tree] match(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str pr
     
     if (isLiteral(s)) {
       newArgs += [makeLitTree(s)];
+      skipLiteralIfAny();
     }
     else if (s is layouts) {
       newArgs += findNextLayout();
