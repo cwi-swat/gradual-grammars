@@ -8,8 +8,8 @@ lexical String =
 
 
 syntax Type =
-  booleanType: "waarheidswaarde" 
-  | integerType: "getal" 
+  integerType: "getal" 
+  | booleanType: "waarheidswaarde" 
   | stringType: "tekst" 
   ;
 
@@ -18,14 +18,15 @@ lexical Label =
   ;
 
 syntax Value =
-  Bool 
+  Integer 
   | String 
-  | Integer 
+  | Bool 
   ;
 
 lexical Id =
   (  [0-9 A-Z _ a-z] !<< [A-Z a-z]   [\- 0-9 A-Z _ a-z]* !>> [0-9 A-Z _ a-z]  ) \ Keywords 
   ;
+
 
 lexical Integer =
   [\-]? [0-9]+ !>> [0-9] 
@@ -37,13 +38,13 @@ keyword Reserved =
   ;
 
 syntax Bool =
-  f: "onwaar" 
-  | t: "waar" 
+  t: "waar" 
+  | f: "onwaar" 
   ;
 
 lexical StrChar =
-  ![\" \\] 
-  | [\\] [\" \\ b f n r t] 
+  [\\] [\" \\ b f n r t] 
+  | ![\" \\] 
   ;
 
 layout Standard  =
@@ -55,17 +56,17 @@ start syntax Form =
   ;
 
 syntax Question =
-  question: "vraag"  Id var  "met"  Label label  ":"  Type type 
-  | ifThen: "als"  Expr cond  "dan"  ":"  Question then  () !>> "anders" 
-  | @Foldable group: "{"  Question* questions  "}" 
-  | ifThenElse: "als"  Expr cond  "dan"  ":"  Question then  "anders"  Question els 
+  @Foldable group: "{"  Question* questions  "}" 
+  | ifThen: "als"  "("  Expr cond  ")"  "dan"  ":"  Question then  () !>> "anders" 
+  | question: "vraag"  Id var  "met"  Label label  ":"  Type type 
   | computed: Label label  Id var  ":"  Type type  "="  Expr expr 
+  | ifThenElse: "als"  "("  Expr cond  ")"  "dan"  ":"  Question then  "anders"  Question els 
   ;
 
 syntax Expr =
-  \value: Value 
+  bracket "("  Expr  ")" 
   | var: Id name 
-  | bracket "("  Expr  ")" 
+  | \value: Value 
   > not: "!"  Expr 
   > left 
       ( left mul: Expr  "*"  Expr 
@@ -76,12 +77,12 @@ syntax Expr =
       | left add: Expr  "+"  Expr 
       )
   > non-assoc 
-      ( non-assoc neq: Expr  "!="  Expr 
+      ( non-assoc lt: Expr  "\<"  Expr 
       | non-assoc geq: Expr  "\>="  Expr 
       | non-assoc gt: Expr  "\>"  Expr 
       | non-assoc leq: Expr  "\<="  Expr 
-      | non-assoc lt: Expr  "\<"  Expr 
       | non-assoc eq: Expr  "=="  Expr 
+      | non-assoc neq: Expr  "!="  Expr 
       )
   > left 
       ( left and: Expr  "&&"  Expr 

@@ -87,20 +87,23 @@ Tree makeLitTree(Symbol s) {
 list[Tree] unravel(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str prefix) {
   assert size(fabric) == size(args);
   
-  int cur = 0; // index in fabric production (and tree)
+  int cur = 0; // index in current tree (and fabric production)
+  
+  void skipLiteralIfAny() {
+    if (cur < size(fabric) - 2, isLayout(fabric[cur]), isLiteral(fabric[cur+1])) {
+      cur += 2;
+    }
+  }
   
   Tree findNextLayout() {
     while (cur < size(fabric)) {
       if (isLiteral(fabric[cur])) {
-        ; 
+        cur += 1;
+        continue;
       }
-      else if (isLayout(fabric[cur])) {
+      if (isLayout(fabric[cur])) {
         return args[cur];
       }
-      else {
-         break;
-	  }	  
-	  cur += 1;         
     }
     throw "cannot happen";
   }
@@ -113,14 +116,15 @@ list[Tree] unravel(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str 
   }
   
 
-  int fut = 0; // future index in reference production
-  map[int, int] reorder = ();
+  int fut = 0; // index in the future (reference) production
+  map[int, int] reorder = ( i: 0 | int i <- [0..size(base)]);
+  
   newArgs = while (fut < size(base)) {
     Symbol s = base[fut];
-    reorder[fut] = 0; // default init
     
     if (isLiteral(s)) {
       append makeLitTree(s);
+      skipLiteralIfAny();
     }
     else if (isLayout(s)) {
       append findNextLayout(); // skipping a potential lit
@@ -144,7 +148,7 @@ list[Tree] unravel(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str 
 &T<:Tree unravel(type[&T<:Tree] base, type[&U<:Tree] fabric, &U pt, str suffix, str prefix = "X") {
   return visit (pt) {
     case t:appl(prod(s:label(str l, sort(str nt)), _, _), list[Tree] args) 
-      => appl(bp, unravel(bp.symbols, anchorPlaceholders(fp.symbols, prefix), args, prefix))
+      => appl(bp, unravel(bp.symbols, anchorPlaceholders(fp.symbols, prefix), args, prefix))[@\loc=t@\loc]
       
       // not the most efficient way of looking up prods...
       when /bp:prod(s, _, _) := base.definitions, // NB: syms can be different
