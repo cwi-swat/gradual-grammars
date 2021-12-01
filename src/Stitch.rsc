@@ -9,6 +9,8 @@ import QL_NL_fabric;
 
 import IO;
 import String;
+import Set;
+import List;
 
 import lang::rascal::format::Grammar;
 
@@ -52,7 +54,7 @@ Tree astAt(list[Tree] args, int i) {
    return asts[i];
 }
 
-list[Symbol] anchorPlaceholders(list[Symbol] ss, str prefix) {
+list[Symbol] anchor(list[Symbol] ss, str prefix) {
     // assumes either all placeholders are consecutive or none
     int i = 0;
     return visit (ss) {
@@ -84,10 +86,10 @@ Tree makeLitTree(Symbol s) {
 
 
 // assumes only numbered placeholders in fabric.
-list[Tree] unravel(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str prefix) {
+list[Tree] unravel(list[Symbol] ref, list[Symbol] fabric, list[Tree] args, str prefix) {
   assert size(fabric) == size(args);
   
-  int cur = 0; // index in current tree (and fabric production)
+  int cur = 0; // child index in current tree (and fabric production)
   
   void skipLiteralIfAny() {
     if (cur < size(fabric) - 2, isLayout(fabric[cur]), isLiteral(fabric[cur+1])) {
@@ -95,20 +97,19 @@ list[Tree] unravel(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str 
     }
   }
   
-  Tree findNextLayout() {
+  Tree nextLayout() {
     while (cur < size(fabric)) {
       if (isLiteral(fabric[cur])) {
         cur += 1;
-        continue;
       }
-      if (isLayout(fabric[cur])) {
+      else if (isLayout(fabric[cur])) {
         return args[cur];
       }
     }
-    throw "cannot happen";
+    return dummyLayout(); // needed if ref needs more layout than available in fabric.
   }
   
-  Tree findNextAST() {
+  Tree nextAST() {
      while (cur < size(fabric), isLiteral(fabric[cur]) || isLayout(fabric[cur])) {
        cur += 1;
      }
@@ -117,20 +118,18 @@ list[Tree] unravel(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str 
   
 
   int fut = 0; // index in the future (reference) production
-  map[int, int] reorder = ( i: 0 | int i <- [0..size(base)]);
+  map[int, int] reorder = ( i: 0 | int i <- [0..size(ref)]);
   
-  newArgs = while (fut < size(base)) {
-    Symbol s = base[fut];
-    
-    if (isLiteral(s)) {
-      append makeLitTree(s);
+  newArgs = while (fut < size(ref)) {
+    if (isLiteral(ref[fut])) {
+      append makeLitTree(ref[fut]);
       skipLiteralIfAny();
     }
-    else if (isLayout(s)) {
-      append findNextLayout(); // skipping a potential lit
+    else if (isLayout(ref[fut])) {
+      append nextLayout(); // skipping a potential lit
     }
     else {
-      append findNextAST(); // skipping consecutive lits and layouts
+      append nextAST(); // skipping consecutive lits and layouts
       reorder[fut] = placeholderPos(fabric[cur], prefix);
       cur += 1;
     }
@@ -144,16 +143,16 @@ list[Tree] unravel(list[Symbol] base, list[Symbol] fabric, list[Tree] args, str 
 }
 
 
-@doc{Transform a parse tree from parsing over a stitched grammar to a parse tree over the base grammar}
-&T<:Tree unravel(type[&T<:Tree] base, type[&U<:Tree] fabric, &U pt, str suffix, str prefix = "X") {
+@doc{Transform a parse tree from parsing over a stitched grammar to a parse tree over the ref grammar}
+&T<:Tree unravel(type[&T<:Tree] ref, type[&U<:Tree] fabric, &U<:Tree pt, str locale, str prefix = "X") {
   return visit (pt) {
     case t:appl(prod(s:label(str l, sort(str nt)), _, _), list[Tree] args) 
-      => appl(bp, unravel(bp.symbols, anchorPlaceholders(fp.symbols, prefix), args, prefix))[@\loc=t@\loc]
+      => appl(bp, unravel(bp.symbols, anchor(fp.symbols, prefix), args, prefix))[@\loc=t@\loc]
       
       // not the most efficient way of looking up prods...
-      when /bp:prod(s, _, _) := base.definitions, // NB: syms can be different
+      when /bp:prod(s, _, _) := ref.definitions, // NB: syms can be different
           // the template prod with the same label but suffixed sortname
-         /fp:prod(label(l, sort(/<nt>_<suffix>/)), _, _) := fabric.definitions  
+         /fp:prod(label(l, sort(/<nt>_<locale>/)), _, _) := fabric.definitions  
   } 
 }
 
@@ -164,7 +163,7 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
   fdefs = fabric.definitions;
   
   
-  set[Production] weave(set[Production] ps, set[Production] fs) {
+  list[Production] weave(list[Production] ps, set[Production] fs) {
     
     list[Symbol] weaveSyms(list[Symbol] bss, list[Symbol] fss) {
       list[Symbol] astArgs = [ s | Symbol s <- bss, !isLiteral(s), !(s is layouts) ];
@@ -203,21 +202,34 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
       return p; // unchanged
     }
     
-    return { weave1(p) | Production p <- ps };
+    return [ weave1(p) | Production p <- ps ];
   }
   
+  
+  /*
+  \priority(Symbol def, list[Production] choices) // <5>
+     | \associativity(Symbol def, Associativity \assoc, set[Production] alternatives) // <6>
+     | */
   
   return visit (base) {
     // keywords are simply overruled
     case choice(s:keywords(str kw), set[Production] _)
       => choice(s, fdefs[keywords("<kw>_<suffix>")].alternatives)
 
- 	// TODO: add priority etc.
- 	//\priority(Symbol def, list[Production] choices) // <5>
-     // \associativity(Symbol def, Associativity \assoc, set[Production] alternatives) // <6>
+    case associativity(s:sort(str nt), Associativity a, set[Production] ps) 
+      => associativity(s, a, toSet(weave(toList(ps), fdefs[fnt].alternatives)))
+      when 
+        Symbol fnt := sort("<nt>_<suffix>"),
+        fnt in fdefs
+
+    case priority(s:sort(str nt), list[Production] ps) 
+      => priority(s, weave(ps, fdefs[fnt].alternatives))
+      when 
+        Symbol fnt := sort("<nt>_<suffix>"),
+        fnt in fdefs
  	
-    case c:choice(s:sort(str nt), set[Production] ps) 
-      => choice(s, weave(ps, fdefs[fnt].alternatives))
+    case choice(s:sort(str nt), set[Production] ps) 
+      => choice(s, toSet(weave(toList(ps), fdefs[fnt].alternatives)))
       when 
         Symbol fnt := sort("<nt>_<suffix>"),
         fnt in fdefs

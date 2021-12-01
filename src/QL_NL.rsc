@@ -8,8 +8,8 @@ lexical String =
 
 
 syntax Type =
-  integerType: "getal" 
-  | booleanType: "waarheidswaarde" 
+  booleanType: "waarheidswaarde" 
+  | integerType: "getal" 
   | stringType: "tekst" 
   ;
 
@@ -18,9 +18,9 @@ lexical Label =
   ;
 
 syntax Value =
-  Integer 
-  | String 
+  String 
   | Bool 
+  | Integer 
   ;
 
 lexical Id =
@@ -33,8 +33,8 @@ lexical Integer =
   ;
 
 keyword Reserved =
-  "onwaar" 
-  | "waar" 
+  "waar" 
+  | "onwaar" 
   ;
 
 syntax Bool =
@@ -43,8 +43,8 @@ syntax Bool =
   ;
 
 lexical StrChar =
-  [\\] [\" \\ b f n r t] 
-  | ![\" \\] 
+  ![\" \\] 
+  | [\\] [\" \\ b f n r t] 
   ;
 
 layout Standard  =
@@ -57,30 +57,30 @@ start syntax Form =
 
 syntax Question =
   @Foldable group: "{"  Question* questions  "}" 
-  | ifThen: "als"  "("  Expr cond  ")"  "dan"  ":"  Question then  () !>> "anders" 
+  | ifThen: "als"  Expr cond  "dan"  ":"  Question then  () !>> "anders" 
   | question: "vraag"  Id var  "met"  Label label  ":"  Type type 
+  | ifThenElse: "als"  Expr cond  "dan"  ":"  Question then  "anders"  Question els 
   | computed: Label label  Id var  ":"  Type type  "="  Expr expr 
-  | ifThenElse: "als"  "("  Expr cond  ")"  "dan"  ":"  Question then  "anders"  Question els 
   ;
 
 syntax Expr =
-  bracket "("  Expr  ")" 
+  \value: Value 
   | var: Id name 
-  | \value: Value 
-  > not: "!"  Expr 
+  | bracket "("  Expr  ")" 
+  > not: "niet"  Expr 
   > left 
-      ( left mul: Expr  "*"  Expr 
-      | left div: Expr  "/"  Expr 
+      ( left div: Expr  "/"  Expr 
+      | left mul: Expr  "*"  Expr 
       )
   > left 
-      ( left sub: Expr  "-"  Expr 
-      | left add: Expr  "+"  Expr 
+      ( left add: Expr  "+"  Expr 
+      | left sub: Expr  "-"  Expr 
       )
   > non-assoc 
-      ( non-assoc lt: Expr  "\<"  Expr 
-      | non-assoc geq: Expr  "\>="  Expr 
+      ( non-assoc geq: Expr  "\>="  Expr 
       | non-assoc gt: Expr  "\>"  Expr 
       | non-assoc leq: Expr  "\<="  Expr 
+      | non-assoc lt: Expr  "groter"  "dan"  Expr 
       | non-assoc eq: Expr  "=="  Expr 
       | non-assoc neq: Expr  "!="  Expr 
       )
