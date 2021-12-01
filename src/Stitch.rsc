@@ -162,7 +162,6 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
   bdefs = base.definitions;
   fdefs = fabric.definitions;
   
-  
   list[Production] weave(list[Production] ps, set[Production] fs) {
     
     list[Symbol] weaveSyms(list[Symbol] bss, list[Symbol] fss) {
@@ -170,15 +169,11 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
       int curArg = 0;
       return for (Symbol s <- fss) {
         switch (placeholderPos(s, placeholder)) {
-          case 0: {
-            // NB: assumes that all placeholders are consecutive
-            // (no mixing of X and X_i)
+          case 0: { // NB: assumes that all placeholders are consecutive (no mixing of X and X_i)
             append astArgs[curArg];
             curArg += 1;
           }
-          
-          // Not a placeholder
-          case -1: append s;
+          case -1: append s; // Not a placeholder
           
           default: append astArgs[placeholderPos(s, placeholder) - 1];
         } 
@@ -190,13 +185,6 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
          , str nt2 := "<nt>_<suffix>"
          , f:prod(label(l, sort(nt2)), list[Symbol] ss, _) <- fs) {
 
-        /* 
-          modify f:
-          - strip suffix
-          - replace placeholders with corresponding AST args
-          - use attributes from base
-        */
-        
         return prod(label(l, sort(nt)), weaveSyms(bss, ss), as); 
       }
       return p; // unchanged
@@ -204,12 +192,6 @@ type[&T] stitch(type[&T<:Tree] base, type[&U<:Tree] fabric, str suffix, str plac
     
     return [ weave1(p) | Production p <- ps ];
   }
-  
-  
-  /*
-  \priority(Symbol def, list[Production] choices) // <5>
-     | \associativity(Symbol def, Associativity \assoc, set[Production] alternatives) // <6>
-     | */
   
   return visit (base) {
     // keywords are simply overruled

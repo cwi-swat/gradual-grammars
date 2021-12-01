@@ -18,7 +18,7 @@ syntax Type_NL
   
 syntax Expr_NL
   = not: "niet" X
-  | lt: Expr "groter" "dan" Expr
+  | gt: Expr "groter" "dan" Expr
   ;  
   
 type[start[Form_NL]] reflect() = #start[Form_NL];
