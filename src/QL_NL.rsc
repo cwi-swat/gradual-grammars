@@ -8,9 +8,9 @@ lexical String =
 
 
 syntax Type =
-  stringType: "tekst" 
-  | integerType: "getal" 
+  integerType: "getal" 
   | booleanType: "waarheidswaarde" 
+  | stringType: "tekst" 
   ;
 
 lexical Label =
@@ -18,13 +18,13 @@ lexical Label =
   ;
 
 syntax Value =
-  Integer 
-  | String 
+  String 
   | Bool 
+  | Integer 
   ;
 
 lexical Id =
-  (  [0-9 A-Z _ a-z] !<< [A-Z a-z]   [\- 0-9 A-Z _ a-z]* !>> [0-9 A-Z _ a-z]  ) \ Keywords 
+  (  [0-9 A-Z _ a-z] !<< [A-Z a-z]   [0-9 A-Z _ a-z]* !>> [0-9 A-Z _ a-z]  ) \ Reserved 
   ;
 
 lexical Integer =
@@ -32,8 +32,14 @@ lexical Integer =
   ;
 
 keyword Reserved =
-  "onwaar" 
+  "niet" 
+  | "tel" 
   | "waar" 
+  | "groter" 
+  | "bij" 
+  | "op" 
+  | "onwaar" 
+  | "dan" 
   ;
 
 syntax Bool =
@@ -55,9 +61,9 @@ start syntax Form =
   ;
 
 syntax Question =
-  ifThen: "als"  Expr cond  "dan"  ":"  Question then  () !>> "anders" 
+  question: "vraag"  Id var  "met"  Label label  ":"  Type type 
+  | ifThen: "als"  Expr cond  "dan"  ":"  Question then  () !>> "anders" 
   | @Foldable group: "{"  Question* questions  "}" 
-  | question: "vraag"  Id var  "met"  Label label  ":"  Type type 
   | ifThenElse: "als"  Expr cond  "dan"  ":"  Question then  "anders"  Question els 
   | computed: Label label  Id var  ":"  Type type  "="  Expr expr 
   ;
@@ -72,16 +78,16 @@ syntax Expr =
       | left mul: Expr  "*"  Expr 
       )
   > left 
-      ( left add: Expr  "+"  Expr 
-      | left sub: Expr  "-"  Expr 
+      ( left sub: Expr  "-"  Expr 
+      | left add: "tel"  Expr  "op"  "bij"  Expr 
       )
-  > non-assoc 
-      ( non-assoc neq: Expr  "!="  Expr 
-      | non-assoc geq: Expr  "\>="  Expr 
-      | non-assoc gt: Expr  "groter"  "dan"  Expr 
-      | non-assoc leq: Expr  "\<="  Expr 
-      | non-assoc lt: Expr  "\<"  Expr 
-      | non-assoc eq: Expr  "=="  Expr 
+  > left 
+      ( left leq: Expr  "\<="  Expr 
+      | left lt: Expr  "\<"  Expr 
+      | left gt: Expr  "groter"  "dan"  Expr 
+      | left geq: Expr  "\>="  Expr 
+      | left neq: Expr  "!="  Expr 
+      | left eq: Expr  "=="  Expr 
       )
   > left 
       ( left and: Expr  "&&"  Expr 
@@ -96,8 +102,8 @@ lexical Whitespace =
   ;
 
 lexical WhitespaceOrComment =
-  whitespace: Whitespace 
-  | comment: Comment 
+  comment: Comment 
+  | whitespace: Whitespace 
   ;
 
 lexical Comment =

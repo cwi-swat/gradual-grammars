@@ -3,15 +3,14 @@ module Stitch
 import Grammar;
 import ParseTree;
 import Type;
-
-import QL;
-import QL_NL_fabric;
-
 import IO;
 import String;
 import Set;
 import List;
-
+import QL; // ref grammar
+import QL_NL_fabric;
+import util::Maybe;
+import util::Benchmark;
 import lang::rascal::format::Grammar;
 
 void main() {
@@ -29,25 +28,25 @@ void main() {
   writeFile(|project://gradual-grammars/src/<moduleName>.rsc|, rsc);
 }
 
+start[Form] testIt(start[Form] f) {
+  type[start[Form]] base = QL::reflect();
+  type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
+  return unravel(base, fabric, f, "NL");
+}
+
+tuple[start[Form], int] testItWithTime(start[Form] f) {
+  type[start[Form]] base = QL::reflect();
+  type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
+  int t0 = getMilliTime();
+  start[Form] f2 = unravel(base, fabric, f, "NL");
+  int t1 = getMilliTime();
+  return <f2, t1 - t0>;
+}
 
 bool isLiteral(Symbol s) = (lit(_) := s) || (cilit(_) := s); 
 
 bool isLayout(Symbol s) = (s is layouts); 
 
-
-start[Form] testIt(str form) {
-  type[start[Form]] base = QL::reflect();
-  type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
-  type[start[Form]] st = stitch(base, fabric, "NL");
-  start[Form] f = parse(st, form);
-  return unravel(base, fabric, f, "NL");
-}
-
-start[Form] testIt(Tree q) {
-  type[start[Form]] base = QL::reflect();
-  type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
-  return unravel(base, fabric, q, "NL");
-}
 
 Tree astAt(list[Tree] args, int i) {
    asts = [ a | Tree a <- args, !isLiteral(a.prod.def), !(a.prod.def is layouts) ];
@@ -87,6 +86,17 @@ Tree makeLitTree(Symbol s) {
 
 // assumes only numbered placeholders in fabric.
 list[Tree] unravel(list[Symbol] ref, list[Symbol] fabric, list[Tree] args, str prefix) {
+  if (size(fabric) != size(args)) {
+    println("Incompatible fabric prod:");
+    println(fabric);
+    println("For kid arguments: ");
+    for (int i <- [0..size(args)]) {
+      println("<i>: <args[i]>");
+    }
+
+  }
+
+
   assert size(fabric) == size(args);
   
   int cur = 0; // child index in current tree (and fabric production)
@@ -137,23 +147,50 @@ list[Tree] unravel(list[Symbol] ref, list[Symbol] fabric, list[Tree] args, str p
     fut += 1;   
   }  
   
-  Tree lookup(int i) = reorder[i] > 0 ? astAt(newArgs, reorder[i] - 1) : newArgs[i];
-  
-  return [ lookup(i) | int i <- [0..size(newArgs)] ];
+  return [ reorder[i] > 0 ? astAt(newArgs, reorder[i] - 1) : newArgs[i] | int i <- [0..size(newArgs)] ];
 }
 
 
 @doc{Transform a parse tree from parsing over a stitched grammar to a parse tree over the ref grammar}
 &T<:Tree unravel(type[&T<:Tree] ref, type[&U<:Tree] fabric, &U<:Tree pt, str locale, str prefix = "X") {
-  return visit (pt) {
-    case t:appl(prod(s:label(str l, sort(str nt)), _, _), list[Tree] args) 
-      => appl(bp, unravel(bp.symbols, anchor(fp.symbols, prefix), args, prefix))[@\loc=t@\loc]
-      
-      // not the most efficient way of looking up prods...
-      when /bp:prod(s, _, _) := ref.definitions, // NB: syms can be different
-          // the template prod with the same label but suffixed sortname
-         /fp:prod(label(l, sort(/<nt>_<locale>/)), _, _) := fabric.definitions  
-  } 
+  
+  @memo
+  Maybe[tuple[Production, Production]] lookup(str l, str nt) {
+    if (/bp:prod(label(l, sort(nt)), _, _) := ref.definitions[sort(nt)], 
+        /fp:prod(label(l, sort(/<nt>_<locale>/)), _, _) := fabric.definitions[sort("<nt>_<locale>")]) { 
+        return just(<bp, fp>);
+    }
+    return nothing();
+  }
+
+  Tree rewrite(Tree t) { // todo: locs
+    switch (t) {
+      case appl(p:prod(\start(_), _, _), list[Tree] args): {
+        return appl(p, [ rewrite(a) | Tree a <- args ]);
+      }
+      case appl(p:regular(_), list[Tree] args): {
+        return appl(p, [ rewrite(a) | Tree a <- args ]);
+      }
+      case appl(p:prod(label(str l, sort(str nt)), _, _), list[Tree] args): {
+        args = [ rewrite(a) | Tree a <- args ];
+        if (just(<Production bp, Production fp>) := lookup(l, nt)) {
+          return appl(bp, unravel(bp.symbols, anchor(fp.symbols, prefix), args, prefix));
+        }
+        return appl(p, args);
+      }
+      default: {
+        return t;
+      }
+    }
+  }
+
+  return rewrite(pt);
+
+  // return visit (pt) {
+  //   case t:appl(prod(s:label(str l, sort(str nt)), _, _), list[Tree] args) 
+  //     => appl(bp, unravel(bp.symbols, anchor(fp.symbols, prefix), args, prefix)) // [@\loc=t@\loc]      
+  //     when just(Production bp, Production fp) := lookup(l, nt)
+  // } 
 }
 
 

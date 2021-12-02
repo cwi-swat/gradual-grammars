@@ -9,7 +9,7 @@ syntax Question_NL
   
 syntax Bool_NL = t: "waar" | f: "onwaar";
 
-keyword Reserved_NL = "waar" | "onwaar" ;
+keyword Reserved_NL = "waar" | "onwaar" | "tel" | "bij" | "groter" | "dan" | "niet" | "op";
 
 syntax Type_NL
   = booleanType: "waarheidswaarde" 
@@ -19,6 +19,7 @@ syntax Type_NL
 syntax Expr_NL
   = not: "niet" X
   | gt: Expr "groter" "dan" Expr
+  | add: "tel" Expr "op" "bij" Expr 
   ;  
   
 type[start[Form_NL]] reflect() = #start[Form_NL];

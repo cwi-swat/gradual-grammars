@@ -41,7 +41,7 @@ syntax Expr
       add: Expr "+" Expr
     | sub: Expr "-" Expr
   )
-  > non-assoc (
+  > left (
       lt: Expr "\<" Expr
     | leq: Expr "\<=" Expr
     | gt: Expr "\>" Expr
@@ -73,7 +73,7 @@ lexical StrChar
 lexical Integer =  [\-]? [0-9]+ !>> [0-9];
   
 lexical Id 
-  = ([a-z A-Z 0-9 _] !<< [a-z A-Z][\-a-z A-Z 0-9 _]* !>> [a-z A-Z 0-9 _]) \ Keywords
+  = ([a-z A-Z 0-9 _] !<< [a-z A-Z][a-z A-Z 0-9 _]* !>> [a-z A-Z 0-9 _]) \ Reserved
   ;
   
 type[start[Form]] reflect() = #start[Form];
