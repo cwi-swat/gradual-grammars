@@ -11,7 +11,7 @@ start syntax Form
 syntax Question
   = question: Label label Id var ":" Type type 
   | computed: Label label Id var ":" Type type "=" Expr expr
-  | ifThen: "if" "(" Expr cond ")" Question then () !>> "else"
+  | ifThen: "if" "(" Expr cond ")" Question!dummy then () !>> "else"
   | ifThenElse: "if" "(" Expr cond ")" Question then "else" Question els
   | @Foldable group: "{" Question* questions "}"
   ;

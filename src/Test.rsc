@@ -32,10 +32,10 @@ void randomizedTests(int n=100, int depth=10) {
         }
         catch e:ParseError(loc l): {
             println("parse error: <e>");
-            continue;
             println(src);
             println("#####");
             println(src[l.offset..]);
+            continue;
             return;
             
         }
