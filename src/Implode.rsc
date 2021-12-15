@@ -7,10 +7,8 @@ import String;
 import Node;
 import IO;
 
-&T<:node implode(type[&T<:node] astType, Tree tree, Maybe[type[Tree]] fabric=nothing()) {
-  return typeCast(astType, implode(tree, astType.symbol, defs=astType.definitions));
-} 
-
+&T<:node implode(type[&T<:node] astType, Tree tree) 
+  = typeCast(astType, implode(tree, astType.symbol, defs=astType.definitions));
 
 bool isASTarg(Tree a) = !(a.prod.def is lit || a.prod.def is cilit 
   || a.prod.def is layouts || a.prod.def is empty);
@@ -18,14 +16,29 @@ bool isASTarg(Tree a) = !(a.prod.def is lit || a.prod.def is cilit
 list[Tree] astArgs(list[Tree] args) = [ a | Tree a <- args, isASTarg(a) ];
 
 
+value implodeToTuple(list[Tree] astArgs, list[Symbol] syms, map[Symbol, Production] defs) {
+   value im(int i, Symbol s) {
+     return implode(astArgs[i], s, defs=defs);
+   }
+   
+   switch (syms) {
+     case [Symbol s0]: return <im(0, s0)>;
+     case [Symbol s0, Symbol s1]: return <im(0, s0), im(1, s1)>;
+     case [Symbol s0, Symbol s1, Symbol s2]: return <im(0, s0), im(1, s1), im(2, s2)>;
+     case [Symbol s0, Symbol s1, Symbol s2, Symbol s3]: return <im(0, s0), im(1, s1), im(2, s2), im(3, s3)>;
+     default: throw "Unsupported tuple arity: <size(syms)>";
+   }
+}
+
 value implode(Tree t, Symbol s, map[Symbol, Production] defs = ()) {
   s = delabel(s);
   switch (s) {
     case \bool(): return "<t>" == "true";
     case \int(): return toInt("<t>");
     case \str(): return "<t>";
-    case \list(Symbol k): return [ implode(a, delabel(k), defs=defs) | Tree a <- astArgs(t.args) ];
-    case \set(Symbol k): return { implode(a, delabel(k), defs=defs) | Tree a <- astArgs(t.args) };
+    case \list(Symbol k): return [ implode(a, k, defs=defs) | Tree a <- astArgs(t.args) ];
+    case \set(Symbol k): return { implode(a, k, defs=defs) | Tree a <- astArgs(t.args) };
+    case \tuple(list[Symbol] ks): return implodeToTuple(astArgs(t.args), ks, defs);
     case \adt(_, _): return implodeToCons(t, s, defs);
     case \node(): return implodeToNode(t);
     case \value(): return "<t>";
@@ -33,7 +46,7 @@ value implode(Tree t, Symbol s, map[Symbol, Production] defs = ()) {
   }
 }
 
-node implodeToCons(t:appl(prod(label(str l, sort(str n)), _, _), list[Tree] args), Symbol adt, map[Symbol, Production] defs) {
+node implodeToCons(Tree t, Symbol adt, map[Symbol, Production] defs) {
   assert adt is adt: "No adt given: <adt>";
   
   if (appl(prod(label(str l, sort(str n)), _, _), list[Tree] args) := t) { 
@@ -48,10 +61,6 @@ node implodeToCons(t:appl(prod(label(str l, sort(str n)), _, _), list[Tree] args
   
   throw "Expected a parse tree with a production label, not `<t>`";
 }
-
-
-Symbol delabel(label(_, Symbol s)) = s;
-default Symbol delabel(Symbol s) = s;
 
 
 value implodeToNode(Tree t) {
@@ -78,3 +87,6 @@ list[value] implodeArgs(list[Tree] astArgs, list[Symbol] astTypes, map[Symbol, P
   
   return [ implode(astArgs[i], astTypes[i], defs=defs) | int i <- [0..size(astArgs)] ];
 }
+
+Symbol delabel(label(_, Symbol s)) = s;
+default Symbol delabel(Symbol s) = s;
