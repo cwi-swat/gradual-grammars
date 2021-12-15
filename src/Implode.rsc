@@ -5,6 +5,7 @@ import Type;
 import ParseTree;
 import String;
 import Node;
+import IO;
 
 &T<:node implode(type[&T<:node] astType, Tree tree, Maybe[type[Tree]] fabric=nothing()) {
   return typeCast(astType, implode(tree, astType.symbol, defs=astType.definitions));
@@ -18,12 +19,14 @@ list[Tree] astArgs(list[Tree] args) = [ a | Tree a <- args, isASTarg(a) ];
 
 
 value implode(Tree t, Symbol s, map[Symbol, Production] defs = ()) {
-  switch (delabel(s)) {
+  s = delabel(s);
+  switch (s) {
     case \bool(): return "<t>" == "true";
     case \int(): return toInt("<t>");
     case \str(): return "<t>";
     case \list(Symbol k): return [ implode(a, delabel(k), defs=defs) | Tree a <- astArgs(t.args) ];
-    case \adt(_, _): return implodeToCons(t, delabel(s), defs);
+    case \set(Symbol k): return { implode(a, delabel(k), defs=defs) | Tree a <- astArgs(t.args) };
+    case \adt(_, _): return implodeToCons(t, s, defs);
     case \node(): return implodeToNode(t);
     case \value(): return "<t>";
     default: throw "Unsuported AST type: <s>";
@@ -35,8 +38,10 @@ node implodeToCons(t:appl(prod(label(str l, sort(str n)), _, _), list[Tree] args
   
   if (appl(prod(label(str l, sort(str n)), _, _), list[Tree] args) := t) { 
     if (cons(label(l, adt), list[Symbol] kids, list[Symbol] kws, _) <- defs[adt].alternatives) {
+      println("KWS: <kws>");
       type[value] theType = type(adt, defs);  
-      return typeCast(#node, make(theType, l, implodeArgs(astArgs(args), kids, defs), ( "src": t@\loc | "src" <- kws )));
+      return typeCast(#node, make(theType, l, implodeArgs(astArgs(args), kids, defs), 
+        ( "src": t@\loc | label("src", \loc()) <- kws )));
     }  
     throw "Could not find AST constructor for type <n> with name <l>";
   }
