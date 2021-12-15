@@ -23,4 +23,7 @@ data Expr(loc src=|dummy:///|)
   = var(str name)
   | \value(value v)
   | sub(Expr lhs, Expr rhs)
+  | add(Expr lhs, Expr rhs)
+  | gt(Expr lhs, Expr rhs)
+  | not(Expr arg)
   ;

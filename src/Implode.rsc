@@ -9,8 +9,8 @@ import IO;
 import Stitch;
 import Map;
 
-&T<:node implode(type[&T<:node] astType, Tree tree) 
-  = typeCast(astType, implode(tree, astType.symbol, defs=astType.definitions));
+&T<:node implode(type[&T<:node] astType, Tree tree, ASTreorder reorder = {}) 
+  = typeCast(astType, implode(tree, astType.symbol, defs=astType.definitions, reorder=reorder));
 
 
 value implode(Tree t, Symbol s, map[Symbol, Production] defs = (), ASTreorder reorder = {}) {
@@ -34,6 +34,10 @@ list[value] applyRemapping(list[value] args, map[int, int] remap)
    
 node implodeToCons(Tree t, Symbol adt, map[Symbol, Production] defs, ASTreorder reorder) {
   assert adt is adt: "No adt given: <adt>";
+  
+  if (appl(prod(_, _, {_*, \bracket()}), list[Tree] args) := t) {
+  	return implodeToCons(args[2], adt, defs, reorder);
+  }
   
   if (appl(prod(label(str l, sort(str n)), _, _), list[Tree] args) := t) { 
     assert adt.name == n: "Provided adt does not have the same name as the nonterminal (<n>)";
@@ -66,7 +70,7 @@ list[value] implodeArgs(list[Tree] astArgs, list[Symbol] astTypes, map[Symbol, P
     throw "Parse tree does not have enough AST arguments for AST type";
   }
   
-  return [ implode(astArgs[i], astTypes[i], defs=defs) | int i <- [0..size(astArgs)] ];
+  return [ implode(astArgs[i], astTypes[i], defs=defs, reorder=reorder) | int i <- [0..size(astArgs)] ];
 }
 
 
