@@ -6,34 +6,50 @@ import ParseTree;
 import String;
 import Node;
 import IO;
+import Stitch;
+import Map;
 
 &T<:node implode(type[&T<:node] astType, Tree tree) 
   = typeCast(astType, implode(tree, astType.symbol, defs=astType.definitions));
 
 
-value implode(Tree t, Symbol s, map[Symbol, Production] defs = ()) {
+value implode(Tree t, Symbol s, map[Symbol, Production] defs = (), ASTreorder reorder = {}) {
   s = delabel(s);
   switch (s) {
     case \bool(): return "<t>" == "true";
     case \int(): return toInt("<t>");
     case \str(): return "<t>";
-    case \list(Symbol k): return [ implode(a, k, defs=defs) | Tree a <- astArgs(t.args) ];
-    case \set(Symbol k): return { implode(a, k, defs=defs) | Tree a <- astArgs(t.args) };
+    case \list(Symbol k): return [ implode(a, k, defs=defs, reorder=reorder) | Tree a <- astArgs(t.args) ];
+    case \set(Symbol k): return { implode(a, k, defs=defs, reorder=reorder) | Tree a <- astArgs(t.args) };
     case \tuple(list[Symbol] ks): return implodeToTuple(astArgs(t.args), ks, defs);
-    case \adt(_, _): return implodeToCons(t, s, defs);
+    case \adt(_, _): return implodeToCons(t, s, defs, reorder);
     case \node(): return implodeToNode(t);
     case \value(): return "<t>";
     default: throw "Unsuported AST type: <s>";
   }
 }
 
-node implodeToCons(Tree t, Symbol adt, map[Symbol, Production] defs) {
+list[value] applyRemapping(list[value] args, map[int, int] remap) 
+  = [ args[remap[i]] | int i <- [0..size(args)] ];
+   
+node implodeToCons(Tree t, Symbol adt, map[Symbol, Production] defs, ASTreorder reorder) {
   assert adt is adt: "No adt given: <adt>";
   
   if (appl(prod(label(str l, sort(str n)), _, _), list[Tree] args) := t) { 
+    assert adt.name == n: "Provided adt does not have the same name as the nonterminal (<n>)";
+     
     if (cons(label(l, adt), list[Symbol] kids, list[Symbol] kws, _) <- defs[adt].alternatives) {
+        
+      list[value] impArgs = implodeArgs(astArgs(args), kids, defs, reorder);
+      
+      // this if is essential because reordering is opt-in
+      // the fabric does not have to reorder everything.
+      if (<n, l, map[int, int] remap> <- reorder) {
+        impArgs = applyRemapping(impArgs, remap);
+      } 
+      
       type[value] theType = type(adt, defs);  
-      return typeCast(#node, make(theType, l, implodeArgs(astArgs(args), kids, defs), 
+      return typeCast(#node, make(theType, l, impArgs, 
         ( "src": t@\loc | label("src", \loc()) <- kws )));
     }  
     throw "Could not find AST constructor for type <n> with name <l>";
@@ -42,7 +58,7 @@ node implodeToCons(Tree t, Symbol adt, map[Symbol, Production] defs) {
   throw "Expected a parse tree with a production label, not `<t>`";
 }
 
-list[value] implodeArgs(list[Tree] astArgs, list[Symbol] astTypes, map[Symbol, Production] defs) {
+list[value] implodeArgs(list[Tree] astArgs, list[Symbol] astTypes, map[Symbol, Production] defs, ASTreorder reorder) {
   if (size(astArgs) > size(astTypes)) {
     throw "Parse tree has more AST arguments than expected by AST type";
   }

@@ -65,7 +65,6 @@ ASTreorder fabric2reorder(type[&T<:Tree] fabric, str locale, str prefix = "X") {
     = [ s | Symbol s <- ss, !isLiteral(s), !isLayout(s), !(s is empty) ];
   
   for (Symbol s <- fabric.definitions) {
-    println("SYMBOL: <s>");
     for (/prod(label(str l, sort(/^<nt:[a-zA-Z0-9_]+>_<locale>$/)), list[Symbol] syms, _) := fabric.definitions[s]) {
       list[Symbol] as = astSyms(syms);
       reorder += {<nt, l, ( i: remap(as[i], i) | int i <- [0..size(as)] )>};
