@@ -13,6 +13,10 @@ import util::Maybe;
 import util::Benchmark;
 import lang::rascal::format::Grammar;
 
+
+
+
+
 void main() {
   base = QL::reflect();
   fabric = QL_NL_fabric::reflect();
@@ -42,6 +46,34 @@ tuple[start[Form], int] testItWithTime(start[Form] f) {
   int t1 = getMilliTime();
   return <f2, t1 - t0>;
 }
+
+
+alias ASTreorder = rel[str nt, str label, map[int, int] reorder];
+
+
+ASTreorder fabric2reorder(type[&T<:Tree] fabric, str locale, str prefix = "X") {
+  ASTreorder reorder = {};
+  
+  int remap(Symbol s, int base) {
+    if (sort(/<prefix>_<pos:[0-9]+>/) := s) {
+      return toInt(pos) - 1; // the placeholders are 1-based
+    }
+    return base;
+  }
+  
+  list[Symbol] astSyms(list[Symbol] ss)
+    = [ s | Symbol s <- ss, !isLiteral(s), !isLayout(s), !(s is empty) ];
+  
+  for (Symbol s <- fabric.definitions) {
+    println("SYMBOL: <s>");
+    for (/prod(label(str l, sort(/^<nt:[a-zA-Z0-9_]+>_<locale>$/)), list[Symbol] syms, _) := fabric.definitions[s]) {
+      list[Symbol] as = astSyms(syms);
+      reorder += {<nt, l, ( i: remap(as[i], i) | int i <- [0..size(as)] )>};
+    }
+  }
+  return reorder;
+}
+
 
 bool isLiteral(Symbol s) = (lit(_) := s) || (cilit(_) := s); 
 
@@ -82,6 +114,7 @@ Tree makeLitTree(Symbol s) {
    
    return appl(prod(s, syms, {}), args);
 }
+
 
 
 // assumes only numbered placeholders in fabric.
