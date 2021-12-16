@@ -12,9 +12,7 @@ import QL_NL_fabric;
 import util::Maybe;
 import util::Benchmark;
 import lang::rascal::format::Grammar;
-
-
-
+import Implode;
 
 
 void main() {
@@ -46,9 +44,6 @@ tuple[start[Form], int] testItWithTime(start[Form] f) {
   int t1 = getMilliTime();
   return <f2, t1 - t0>;
 }
-
-
-alias ASTreorder = rel[str nt, str label, map[int, int] reorder];
 
 
 ASTreorder fabric2reorder(type[&T<:Tree] fabric, str locale, str prefix = "X") {
