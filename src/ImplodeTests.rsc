@@ -1,6 +1,7 @@
 module ImplodeTests
 
 import Implode;
+import Node;
 
 layout Space = [\ \n]* !>> [\ \n];
  
@@ -18,11 +19,15 @@ syntax Expr
   = boolean: Bool
   | integer: Int
   | var: Id
+  | withSrc: "$$"
   | pair: "(" Expr "," Expr ")"
+  | record: "{" {IdExpr ","}* "}"
   | bracket "(" Expr ")"
   | left add: Expr "+" Expr
   > quote: "quote" Expr
   ;
+  
+syntax IdExpr = Id ":" Expr; // NB: no prod label
 
 lexical Id = [a-z]+ !>> [a-z] \ Reserved;
 
@@ -45,6 +50,7 @@ data AExpr
   = boolean(bool b)
   | integer(int n)
   | var(str s)
+  | withSrc(loc src=|dummy:///|)
   | quote(node t)
   | add(AExpr lhs, AExpr rhs)
   ;
@@ -63,15 +69,21 @@ test bool testLexicalInt() = myImplode((Expr)`42`) == integer(42);
 
 test bool testLexicalStr() = myImplode((Expr)`x`) == var("x");
 
-test bool testUntypedNode() = myImplode((Expr)`quote 42 + 42`) 
-  == quote("add"("integer"("42"), "integer"("42")));
+test bool testSrcParamIfDeclared() = myImplode((Expr)`$$`).src != |dummy:///|;
+
+
+test bool testUntypedNode() =  
+  quote("add"("integer"("42"), "integer"("42"))) := myImplode((Expr)`quote 42 + 42`); 
+
+test bool testUntypedNodesGetSrcParam() =
+  "src" in getKeywordParameters(myImplode((Expr)`quote 42 + 42`).t);
   
 test bool testTypedNode() = myImplode((Expr)`1 + 2`) == add(integer(1), integer(2));
 
 test bool testBracketIsSkipped() = myImplode((Expr)`(1 + 2)`) == add(integer(1), integer(2));
 
-test bool testBracketIsSkippedUntyped() = myImplode((Expr)`quote (1 + 2)`) 
-  == quote("add"("integer"("1"), "integer"("2")));
+test bool testBracketIsSkippedUntyped() =  
+  quote("add"("integer"("1"), "integer"("2"))) := myImplode((Expr)`quote (1 + 2)`); 
 
 test bool testMultiType() = myImplode((Stat)`x := 1 + 2`)
   == assign("x", add(integer(1), integer(2)));
@@ -85,11 +97,8 @@ test bool testSet() = myImplode((Stat)`{|x := 1 x := 2 x := 3|}`)
 test bool testReorder() = implode(#AStat, (Stat)`1 =: x`, adtPrefix="A", reorder={<"Stat", "ngissa", (1: 0, 0: 1)>})
   == ngissa("x", integer(1));
   
-test bool testAllTogether() = myImplode((Prog)`{|x := 1 + 2 + x
-										    '{y := quote (1 + 2) + true
-										    'x + 1 =: y}|}
-										    'z := z + z`)
-  == prog([
+test bool testAllTogether() = 
+  prog([
     parallel({
         assign(
           "x",
@@ -118,7 +127,10 @@ test bool testAllTogether() = myImplode((Prog)`{|x := 1 + 2 + x
       add(
         var("z"),
         var("z")))
-  ]);
+  ]) := myImplode((Prog)`{|x := 1 + 2 + x
+					    '{y := quote (1 + 2) + true
+					    'x + 1 =: y}|}
+					    'z := z + z`);
 
 
   

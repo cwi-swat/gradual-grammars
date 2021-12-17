@@ -44,8 +44,14 @@ node implodeToCons(Tree t, Symbol adt, map[Symbol, Production] defs, ASTreorder 
   assert adt is adt: "No adt given: <adt>";
   
   
+  // skip over bracket productions
   if (appl(prod(_, _, {_*, \bracket()}), list[Tree] args) := t) {
   	return implodeToCons(args[2], adt, defs, reorder, adtPrefix);
+  }
+  
+  // skip over injections without a label
+  if (appl(prod(sort(str _), [Symbol _], _), list[Tree] args) := t) {
+    return implodeToCons(args[0], adt, defs, reorder, adtPrefix);
   }
   
   if (appl(prod(label(str l, sort(str n)), _, _), list[Tree] args) := t) { 
@@ -85,21 +91,27 @@ list[value] implodeArgs(list[Tree] astArgs, list[Symbol] astTypes, map[Symbol, P
 
 
 value implodeToNode(Tree t) {
-   // as soon as we go into node, we drop the definitions,
-   // and stay "untyped": all lexicals will be strings. 
+  // as soon as we go into node, we drop the definitions,
+  // and stay "untyped": all lexicals will be strings. 
    
-   if (appl(prod(_, _, {_*, \bracket()}), list[Tree] args) := t) {
+  if (appl(prod(_, _, {_*, \bracket()}), list[Tree] args) := t) {
   	return implodeToNode(args[2]);
+  }
+  
+  if (appl(prod(sort(str _), [Symbol _], _), list[Tree] args) := t) {
+    return implodeToNode(args[0]);
   }
    
    if (appl(prod(label(str l, _), _, _), list[Tree] args) := t) {
      list[Tree] astArgs = astArgs(t.args);
      list[Symbol] astTypes = [ \node() | _ <- astArgs ];
-     return makeNode(l, implodeArgs(astArgs, astTypes, (), {}, "")); //, keywordParameters=("src": t@\loc));
+     return makeNode(l, implodeArgs(astArgs, astTypes, (), {}, ""), keywordParameters=("src": t@\loc));
    }
+   
    if (appl(regular(_), list[Tree] args) := t) {
      return [ implode(a, \node()) | Tree a <- astArgs(args) ];
    }
+   
    return "<t>";
 }
 
