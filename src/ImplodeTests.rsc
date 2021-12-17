@@ -19,6 +19,7 @@ syntax Expr
   = boolean: Bool
   | integer: Int
   | var: Id
+  | ref: "#" Ref
   | withSrc: "$$"
   | pair: "(" Expr "," Expr ")"
   | record: "{" {IdExpr ","}* "}"
@@ -28,6 +29,10 @@ syntax Expr
   ;
   
 syntax IdExpr = Id ":" Expr; // NB: no prod label
+
+syntax Ref = Ref2;
+
+syntax Ref2 = Int;
 
 lexical Id = [a-z]+ !>> [a-z] \ Reserved;
 
@@ -50,6 +55,7 @@ data AExpr
   = boolean(bool b)
   | integer(int n)
   | var(str s)
+  | ref(int n)
   | withSrc(loc src=|dummy:///|)
   | quote(node t)
   | add(AExpr lhs, AExpr rhs)
@@ -58,7 +64,7 @@ data AExpr
 
 AExpr myImplode(Expr e) = implode(#AExpr, e, adtPrefix="A");
 
-AStat myImplode(Stat s) = implode(#AStat, s, adtPrefix="A");
+AStat myImplode(Stat s) = implode(#AStat, s, adtPrefix="A", reorder={<"Stat", "ngissa", (1: 0, 0: 1)>});
 
 AProg myImplode(Prog p) = implode(#AProg, p, adtPrefix="A", reorder={<"Stat", "ngissa", (1: 0, 0: 1)>});
 
@@ -71,7 +77,11 @@ test bool testLexicalStr() = myImplode((Expr)`x`) == var("x");
 
 test bool testSrcParamIfDeclared() = myImplode((Expr)`$$`).src != |dummy:///|;
 
+test bool testInjectionSkipping() = myImplode((Expr)`#42`) == ref(42); 
 
+test bool testInjectionSkippingUntyped() =   
+  quote("ref"("42")) := myImplode((Expr)`quote #42`);
+  
 test bool testUntypedNode() =  
   quote("add"("integer"("42"), "integer"("42"))) := myImplode((Expr)`quote 42 + 42`); 
 
@@ -94,7 +104,7 @@ test bool testList() = myImplode((Stat)`{x := 1 x := 2 x := 3}`)
 test bool testSet() = myImplode((Stat)`{|x := 1 x := 2 x := 3|}`)
   == parallel({assign("x", integer(1)), assign("x", integer(2)), assign("x", integer(3))});
   
-test bool testReorder() = implode(#AStat, (Stat)`1 =: x`, adtPrefix="A", reorder={<"Stat", "ngissa", (1: 0, 0: 1)>})
+test bool testReorder() = myImplode((Stat)`1 =: x`)
   == ngissa("x", integer(1));
   
 test bool testAllTogether() = 

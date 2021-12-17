@@ -26,8 +26,8 @@ value implode(Tree t, Symbol s, map[Symbol, Production] defs = (), ASTreorder re
     case \bool(): return "<t>" == "true";
     case \int(): return toInt("<t>");
     case \str(): return "<t>";
-    case \list(Symbol k): return [ implode(a, k, defs=defs, reorder=reorder, adtPrefix=adtPrefix) | Tree a <- astArgs(t.args) ];
-    case \set(Symbol k): return { implode(a, k, defs=defs, reorder=reorder, adtPrefix=adtPrefix) | Tree a <- astArgs(t.args) };
+    case \list(Symbol k): return implodeToList(t, k, defs, reorder, adtPrefix);
+    case \set(Symbol k): return implodeToSet(t, k, defs, reorder, adtPrefix);
     case \adt(_, _): return implodeToCons(t, s, defs, reorder, adtPrefix);
     case \node(): return implodeToNode(t);
     case \value(): return implodeToNode(t);
@@ -89,29 +89,64 @@ list[value] implodeArgs(list[Tree] astArgs, list[Symbol] astTypes, map[Symbol, P
   return [ implode(astArgs[i], astTypes[i], defs=defs, reorder=reorder, adtPrefix=adtPrefix) | int i <- [0..size(astArgs)] ];
 }
 
+list[value] implodeToList(Tree t, Symbol elt, map[Symbol, Production] defs, ASTreorder reorder, str adtPrefix) {
+  if (appl(prod(sort(str _), [Symbol _], _), list[Tree] args) := t) {
+    return implodeToList(t, elt, defs, reorder, adtPrefix);
+  }
+  
+  if (appl(regular(_), _) !:= t) {
+    throw ImplodeException("Not a regular prod: <t.prod>", t@\loc);
+  }
+  
+  return [ implode(a, elt, defs=defs, reorder=reorder, adtPrefix=adtPrefix) | Tree a <- astArgs(t.args) ];
+}
+
+set[value] implodeToSet(Tree t, Symbol elt, map[Symbol, Production] defs, ASTreorder reorder, str adtPrefix) {
+  if (appl(prod(sort(str _), [Symbol _], _), list[Tree] args) := t) {
+    return implodeToSet(t, elt, defs, reorder, adtPrefix);
+  }
+  
+  if (appl(regular(_), _) !:= t) {
+    throw ImplodeException("Not a regular prod: <t.prod>", t@\loc);
+  }
+  
+  return { implode(a, elt, defs=defs, reorder=reorder, adtPrefix=adtPrefix) | Tree a <- astArgs(t.args) };
+}
 
 value implodeToNode(Tree t) {
   // as soon as we go into node, we drop the definitions,
   // and stay "untyped": all lexicals will be strings. 
    
-  if (appl(prod(_, _, {_*, \bracket()}), list[Tree] args) := t) {
-  	return implodeToNode(args[2]);
-  }
+  // skip over bracket production
+   if (appl(prod(_, _, {_*, \bracket()}), list[Tree] args) := t) {
+   	 return implodeToNode(args[2]);
+   }
   
-  if (appl(prod(sort(str _), [Symbol _], _), list[Tree] args) := t) {
-    return implodeToNode(args[0]);
-  }
+   // skip over injection
+   if (appl(prod(sort(str _), [Symbol _], _), list[Tree] args) := t) {
+     return implodeToNode(args[0]);
+   }
    
+   // labeled prods
    if (appl(prod(label(str l, _), _, _), list[Tree] args) := t) {
      list[Tree] astArgs = astArgs(t.args);
      list[Symbol] astTypes = [ \node() | _ <- astArgs ];
      return makeNode(l, implodeArgs(astArgs, astTypes, (), {}, ""), keywordParameters=("src": t@\loc));
    }
    
+   // no label present
+   if (appl(prod(sort(_), _, _), list[Tree] args) := t) {
+     list[Tree] astArgs = astArgs(t.args);
+     list[Symbol] astTypes = [ \node() | _ <- astArgs ];
+     return makeNode("", implodeArgs(astArgs, astTypes, (), {}, ""), keywordParameters=("src": t@\loc));
+   }
+   
+   // regulars become lists
    if (appl(regular(_), list[Tree] args) := t) {
      return [ implode(a, \node()) | Tree a <- astArgs(args) ];
    }
    
+   // the rest stringss
    return "<t>";
 }
 
