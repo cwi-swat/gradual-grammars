@@ -18,8 +18,8 @@ syntax Type_NL
   
 syntax Expr_NL
   = not: "niet" X
-  | gt: Expr "groter" "dan" Expr
-  | add: "tel" Expr "op" "bij" Expr 
+  | gt: X "groter" "dan" X
+  | add: "tel" X "op" "bij" X 
   ;  
   
 type[start[Form_NL]] reflect() = #start[Form_NL];

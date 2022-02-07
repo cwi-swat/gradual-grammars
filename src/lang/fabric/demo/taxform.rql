@@ -1,0 +1,21 @@
+form taxOfficeExample { 
+  "Did you sell a house in 2020?"
+    hasSoldHouse: boolean 
+  "Did you buy a house in 2020?"
+    hasBoughtHouse: boolean  
+  "Did you enter a loan?"
+    hasMaintLoan: boolean
+
+  if (hasSoldHouse) { 
+    "Private debts for the sold house:"
+      privateDebt: integer
+    "What was the selling price?"
+      sellingPrice: integer  
+    "Value residue:"  
+      valueResidue: integer = 
+       sellingPrice - privateDebt
+  }
+  
+} 
+
+

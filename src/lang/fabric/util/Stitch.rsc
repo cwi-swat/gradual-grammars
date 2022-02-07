@@ -30,7 +30,7 @@ void main() {
   writeFile(|project://gradual-grammars/src/<moduleName>.rsc|, rsc);
 }
 
-start[Form] testIt(start[Form] f) {
+start[Form] testUnravel(start[Form] f) {
   type[start[Form]] base = QL::reflect();
   type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
   return unravel(base, fabric, f, "NL");
@@ -190,7 +190,7 @@ list[Tree] unravel(list[Symbol] ref, list[Symbol] fabric, list[Tree] args, str p
     return nothing();
   }
 
-  Tree rewrite(Tree t) { // todo: locs
+  &T rewrite(&T t) { // todo: locs
     switch (t) {
       case appl(p:prod(\start(_), _, _), list[Tree] args): {
         return appl(p, [ rewrite(a) | Tree a <- args ]);
@@ -205,13 +205,17 @@ list[Tree] unravel(list[Symbol] ref, list[Symbol] fabric, list[Tree] args, str p
         }
         return appl(p, args);
       }
+      case appl(p:prod(sort(str nt), _, {_*, \bracket()}), list[Tree] args): {
+        args = [ rewrite(a) | Tree a <- args ];
+        return appl(p, args);
+      }
       default: {
         return t;
       }
     }
   }
 
-  return rewrite(pt);
+  return typeCast(ref, rewrite(pt));
 
   // return visit (pt) {
   //   case t:appl(prod(s:label(str l, sort(str nt)), _, _), list[Tree] args) 
