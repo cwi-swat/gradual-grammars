@@ -9,9 +9,8 @@ import Set;
 import String;
 import IO;
 
-&T<:Tree genSenTop(type[&T<:Tree] typ, int depth=10) = t
-   when
-     &T t := genSen(typ, depth);
+&T<:Tree genSenTop(type[&T<:Tree] typ, int depth=10) 
+  = typeCast(typ, genSen(typ, depth));
 
 
 Tree genSen(type[&T<:Tree] typ, int depth) 

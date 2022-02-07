@@ -59,5 +59,15 @@ void randomizedTests(int n=100, int depth=10) {
   }
 
 
-  writeFile(|project://gradual-grammars/src/unravel.csv|, csv);
+  writeFile(|project://gradual-grammars/unravel.csv|, csv);
 }
+
+
+//tuple[start[Form], int] testItWithTime(start[Form] f) {
+//  type[start[Form]] base = QL::reflect();
+//  type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
+//  int t0 = getMilliTime();
+//  start[Form] f2 = unravel(base, fabric, f, "NL");
+//  int t1 = getMilliTime();
+//  return <f2, t1 - t0>;
+//}
