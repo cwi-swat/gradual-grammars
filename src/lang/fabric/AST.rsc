@@ -41,10 +41,10 @@ AGrammar implode(start[Module] pt) {
   ls = [ implode(l) | Level l <- pt.top.levels ];
   
   AGrammar g = agrammar("<pt.top.name>", ds, ls);
-  g.src = pt.src.top;
+  g.src = pt@\loc.top;
   if (d:(Directive)`layout <Nonterminal x> = <Sym s>` <- pt.top.directives) {
     g.ws = "<x>";
-    g.levels[0].rules += [arule("<x>", [aprod("<x>", [implode(s)])], src=d.src)];
+    g.levels[0].rules += [arule("<x>", [aprod("<x>", [implode(s)])], src=d@\loc)];
   }
   if ((Directive)`modifies <String base>` <- pt.top.directives) {
     g.base = "<base>"[1..-1];
@@ -90,28 +90,28 @@ default ASymbol implode((Sym)`<Placeholder p>`)
   
 ALevel implode(t:(Level)`level <Nat n> remove <{Label ","}+ ls> <Rule* rs>`)
   = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ], [], 
-       [ implode(r) | Rule r <- rs ], src=n.src);
+       [ implode(r) | Rule r <- rs ], src=n@\loc);
 
 ALevel implode(t:(Level)`level <Nat n> remove <{Label ","}+ ls> deprecate <{Label ","}+ ds> <Rule* rs>`)
   = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ], [ "<l>" | Label l <- ds ], 
-       [ implode(r) | Rule r <- rs ], src=n.src);
+       [ implode(r) | Rule r <- rs ], src=n@\loc);
 
 ALevel implode(t:(Level)`level <Nat n> deprecate <{Label ","}+ ds> <Rule* rs>`)
   = alevel(toInt("<n>"), [], [ "<l>" | Label l <- ds ], 
-       [ implode(r) | Rule r <- rs ], src=n.src);
+       [ implode(r) | Rule r <- rs ], src=n@\loc);
 
 ALevel implode((Level)`level <Nat n> <Rule* rs>`)
   = alevel(toInt("<n>"), [], [], [ implode(r) | Rule r <- rs ],
-       src=n.src);
+       src=n@\loc);
   
 ARule implode(r:(Rule)`<Nonterminal nt> = <{Prod "|"}+ ps>`)
-  = arule("<nt>", [ implode(p) | Prod p <- ps ], src=r.src);
+  = arule("<nt>", [ implode(p) | Prod p <- ps ], src=r@\loc);
 
 AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss>`)
-  = implodeProd(ms, l, ss, "", p.src);
+  = implodeProd(ms, l, ss, "", p@\loc);
   
 AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss> -\> <Label b>`)
-  = implodeProd(ms, l, ss, "<b>", p.src);
+  = implodeProd(ms, l, ss, "<b>", p@\loc);
   
 AProd implodeProd(Modifier* ms, Label l, Sym* ss, str binding, loc src) {
   AProd p = aprod("<l>", [ implode(s) | Sym s <- ss ] , binding=binding);

@@ -1,6 +1,6 @@
 module Plugin
 
-import IDE;
+import lang::fabric::IDE;
 
 void main() {
   setupIDE();

@@ -2,8 +2,9 @@ module lang::fabric::IDE
 
 import util::IDE;
 import ParseTree;
-import lang::fabric::GradualGrammar;
 import Message;
+
+import lang::fabric::GradualGrammar;
 import lang::fabric::Compile;
 
 void setupIDE() {
