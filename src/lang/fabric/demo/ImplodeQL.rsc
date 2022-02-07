@@ -13,7 +13,7 @@ Form implode(Tree t, ASTreorder reorder={})
   = implode(#Form, t, reorder=reorder);
 
 void testIt(Tree t) {
-  type[start[Form_NL]] nl = QL_NL_fabric::reflect();
+  type[start[Form_NL]] nl = lang::fabric::demo::QL_NL_fabric::reflect();
   reorder = fabric2reorder(nl, "NL");
   ast = implode(t, reorder=reorder);
   iprintln(ast);

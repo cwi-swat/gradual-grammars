@@ -1,4 +1,4 @@
-module GenSen
+module util::GenSen
 
 import ParseTree;
 import Type;

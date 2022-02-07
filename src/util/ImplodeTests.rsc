@@ -1,6 +1,6 @@
-module ImplodeTests
+module util::ImplodeTests
 
-import Implode;
+import util::Implode;
 import Node;
 
 layout Space = [\ \n]* !>> [\ \n];

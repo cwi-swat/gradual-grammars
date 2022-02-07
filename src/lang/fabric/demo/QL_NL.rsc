@@ -1,4 +1,4 @@
-module lang::fabric::demo::QL_NL 
+module QL_NL 
 lexical String =
   [\"] StrChar* [\"] 
   ;
@@ -8,9 +8,9 @@ lexical String =
 
 
 syntax Type =
-  stringType: "tekst" 
-  | integerType: "getal" 
+  integerType: "getal" 
   | booleanType: "waarheidswaarde" 
+  | stringType: "tekst" 
   ;
 
 lexical Label =
@@ -18,13 +18,17 @@ lexical Label =
   ;
 
 syntax Value =
-  String 
+  Integer 
+  | String 
   | Bool 
-  | Integer 
   ;
 
 lexical Id =
   (  [0-9 A-Z _ a-z] !<< [A-Z a-z]   [0-9 A-Z _ a-z]* !>> [0-9 A-Z _ a-z]  ) \ Reserved 
+  ;
+
+start syntax Form =
+  form: "formulier"  Id name  "{"  Question* questions  "}" 
   ;
 
 lexical Integer =
@@ -32,40 +36,36 @@ lexical Integer =
   ;
 
 keyword Reserved =
-  "waar" 
+  "op" 
   | "tel" 
+  | "waar" 
   | "groter" 
   | "bij" 
-  | "op" 
   | "onwaar" 
   | "dan" 
   | "niet" 
   ;
 
 syntax Bool =
-  f: "onwaar" 
-  | t: "waar" 
+  t: "waar" 
+  | f: "onwaar" 
   ;
 
 lexical StrChar =
-  ![\" \\] 
-  | [\\] [\" \\ b f n r t] 
+  [\\] [\" \\ b f n r t] 
+  | ![\" \\] 
   ;
 
 layout Standard  =
   WhitespaceOrComment* !>> [\t-\a0D \  \u0205 \u0240 \U001680 \U00180E \U002000-\U00200A \U002028-\U002029 \U00202F \U00205F \U003000] !>> "//" 
   ;
 
-start syntax Form =
-  form: "formulier"  Id name  "{"  Question* questions  "}" 
-  ;
-
 syntax Question =
-  ifThenElse: "als"  Expr cond  "dan"  ":"  Question then  "anders"  Question els 
+  question: "vraag"  Id var  "met"  Label label  ":"  Type type 
   | @Foldable group: "{"  Question* questions  "}" 
   | ifThen: "als"  Expr cond  "dan"  ":"  Question!dummy then  () !>> "anders" 
+  | ifThenElse: "als"  Expr cond  "dan"  ":"  Question then  "anders"  Question els 
   | computed: Label label  Id var  ":"  Type type  "="  Expr expr 
-  | question: "vraag"  Id var  "met"  Label label  ":"  Type type 
   ;
 
 syntax Expr =
@@ -78,8 +78,8 @@ syntax Expr =
       | left div: Expr  "/"  Expr 
       )
   > left 
-      ( left sub: Expr  "-"  Expr 
-      | left add: "tel"  Expr  "op"  "bij"  Expr 
+      ( left add: "tel"  Expr  "op"  "bij"  Expr 
+      | left sub: Expr  "-"  Expr 
       )
   > left 
       ( left gt: Expr  "groter"  "dan"  Expr 

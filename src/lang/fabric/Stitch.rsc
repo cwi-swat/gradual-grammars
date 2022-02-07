@@ -1,4 +1,4 @@
-module Stitch
+module lang::fabric::Stitch
 
 import Grammar;
 import ParseTree;
@@ -7,14 +7,37 @@ import IO;
 import String;
 import Set;
 import List;
-import lang::fabric::demo::QL; // ref grammar
-import QL_NL_fabric;
+
+import lang::rascal::format::Grammar;
+
 import util::Maybe;
 import util::Benchmark;
 import util::Implode;
 
 
+void writeStitchedGrammar(type[&T<:Tree] base, type[&U<:Tree] fabric, 
+ 		str suffix, loc path, str modName, str placeholder="X") {
+	x = stitch(base, fabric, suffix);
+	g = grammar({}, inlineStarts(x.definitions));
+	rsc = grammar2rascal(g, modName);
+	path.path += "/<modName>.rsc";
+	writeFile(path, rsc);
+}
 
+map[Symbol, Production] inlineStarts(map[Symbol, Production] defs) {
+	for (Symbol s <- defs, s is \start) {
+		Symbol arg = s.symbol;
+		if (arg in defs) {
+		  defs -= (s: defs[s]); // delete vacuous start entry
+		  defs[s] = defs[arg][def=s]; // define new one
+		  defs -= (arg: defs[arg]); // remove non-start entry
+		}
+		else {
+		  println("WARNING: couldn\'t find definition for <s>");
+		}
+	}
+	return defs;
+}
 
 ASTreorder fabric2reorder(type[&T<:Tree] fabric, str locale, str prefix = "X") {
   ASTreorder reorder = {};

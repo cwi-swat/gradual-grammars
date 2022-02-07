@@ -1,4 +1,4 @@
-module Implode
+module util::Implode
 
 import util::Maybe;
 import Type;

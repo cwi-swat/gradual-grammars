@@ -1,12 +1,12 @@
-module Test
+module lang::fabric::demo::Test
 
-import QL_NL;
+import lang::fabric::demo::QL_NL;
 import Type;
 import ParseTree;
 import String;
 
-import Stitch;
-import GenSen;
+import lang::fabric::Stitch;
+import util::GenSen;
 import IO;
 import util::Benchmark;
 import lang::csv::IO;
