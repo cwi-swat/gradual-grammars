@@ -48,10 +48,6 @@ void stitchDutchQL() {
   writeStitchedGrammar(base, fabric, "NL", path, "lang::fabric::demo::QL_NL");
 }
 
-//start[Form] testUnravel(start[Form] f) {
-//  return unravel(base, fabric, f, "NL");
-//}
-
 tuple[start[Form], int] unravelWithTime(start[Form] f) {
   type[start[Form]] base = lang::fabric::demo::QL::reflect();
   type[start[Form_NL]] fabric = lang::fabric::demo::QL_NL_fabric::reflect();
