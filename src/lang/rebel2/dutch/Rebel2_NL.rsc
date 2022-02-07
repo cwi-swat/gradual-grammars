@@ -5,9 +5,9 @@ syntax State =
   ;
 
 lexical StringCharacter =
-  ![\" \' \< \> \\] 
+  "\\" [\" \' \< \> \\ b f n r t] 
   | [\n] [\t \  \u0240 \U001680 \U002000-\U00200A \U00202F \U00205F \U003000]* [\'] 
-  | "\\" [\" \' \< \> \\ b f n r t] 
+  | ![\" \' \< \> \\] 
   | UnicodeEscape 
   ;
 
@@ -59,8 +59,8 @@ syntax Spec =
   ;
 
 syntax SearchDepth =
-  exact: "exact"  Int steps  "stappen" 
-  | max: "maximaal"  Int steps  "stappen" 
+  max: "maximaal"  Int steps  "stappen" 
+  | exact: "exact"  Int steps  "stappen" 
   ;
 
 
@@ -131,38 +131,38 @@ syntax Expr =
   brackets: "("  Expr  ")" 
   > var: Id 
     | "|"  Expr  "|" 
-  > Lit 
+  > fieldAccess: Expr  "."  Id 
     | instanceAccess: Expr spc  "["  Id inst  "]" 
     | functionCall: Id func  "("  {Expr ","}* actuals  ")" 
-    | trans: Expr  "."  "^"  Id 
-    | fieldAccess: Expr  "."  Id 
     | reflTrans: Expr  "."  "*"  Id 
+    | trans: Expr  "."  "^"  Id 
+    | Lit 
   > nextVal: Expr  "\'" 
   > "-"  Expr 
-  > non-assoc 
-      ( non-assoc Expr lhs  "/"  Expr rhs 
+  > left 
+      ( left Expr lhs  "*"  Expr rhs 
       )
-    | left 
-        ( left Expr lhs  "*"  Expr rhs 
-        )
     | non-assoc 
         ( non-assoc Expr lhs  "%"  Expr rhs 
         )
-  > non-assoc 
-      ( non-assoc Expr lhs  "-"  Expr rhs 
+    | non-assoc 
+        ( non-assoc Expr lhs  "/"  Expr rhs 
+        )
+  > left 
+      ( left Expr lhs  "++"  Expr rhs 
       )
     | left 
-        ( left Expr lhs  "++"  Expr rhs 
-        )
-    | left 
         ( left Expr lhs  "+"  Expr rhs 
+        )
+    | non-assoc 
+        ( non-assoc Expr lhs  "-"  Expr rhs 
         )
   > "{"  Decl d  "|"  Formula form  "}" 
   ;
 
 syntax Transition =
-  Id super  "{"  StateBlock child  "}" 
-  | State from  "-\>"  State to  ":"  {TransEvent ","}+ events  ";" 
+  State from  "-\>"  State to  ":"  {TransEvent ","}+ events  ";" 
+  | Id super  "{"  StateBlock child  "}" 
   ;
 
 lexical Whitespace =
@@ -175,9 +175,9 @@ syntax Instance =
   ;
 
 syntax Lit =
-  Int 
-  | StringConstant 
+  StringConstant 
   | this: "deze" 
+  | Int 
   | none: "niks" 
   | setLit: "{"  {Expr ","}* elems  "}" 
   ;
@@ -198,8 +198,8 @@ lexical Comment =
   ;
 
 lexical UnicodeEscape =
-  utf16: "\\" [u] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
-  | utf32: "\\" [U] ("10" | (  "0"  [0-9 A-F a-f]  )) [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
+  utf32: "\\" [U] ((  "0"  [0-9 A-F a-f]  ) | "10") [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
+  | utf16: "\\" [u] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
   | ascii: "\\" [a] [0-7] [0-9 A-F a-f] 
   ;
 
@@ -222,8 +222,8 @@ syntax Check =
   ;
 
 syntax Command =
-  run: "draai" 
-  | check: "controleer" 
+  check: "controleer" 
+  | run: "doe" 
   ;
 
 syntax EventVariant =
@@ -231,19 +231,15 @@ syntax EventVariant =
   ;
 
 keyword Keywords =
-  "module" 
+  "feit" 
   | "gebeurtenis" 
-  | "draai" 
   | "neem" 
   | "laatste" 
   | "aan" 
   | "verzameling" 
   | "als" 
   | "controleer" 
-  | "is" 
   | "oneindig" 
-  | "succes" 
-  | "feit" 
   | "los" 
   | "spoor" 
   | "laat" 
@@ -259,12 +255,17 @@ keyword Keywords =
   | "wanneer" 
   | "eerste" 
   | "altijd" 
+  | "doe" 
+  | "is" 
   | "stel" 
   | "volgende" 
   | "alle" 
   | "exact" 
   | "vast" 
   | "voor" 
+  | "succes" 
+  | "module" 
+  | "toestanden" 
   | "eindig" 
   | "noppes" 
   | "uiteindelijk" 
@@ -316,7 +317,7 @@ syntax Config =
   ;
 
 syntax States =
-  "states"  ":"  StateBlock root 
+  states: "toestanden"  ":"  StateBlock root 
   ;
 
 layout Standard  =
@@ -357,10 +358,10 @@ syntax Formula =
     | Expr  "="  Expr 
     | Expr  "\>"  Expr 
   > right 
-      ( right Formula  "&&"  Formula 
+      ( right Formula  "||"  Formula 
       )
     | right 
-        ( right Formula  "||"  Formula 
+        ( right Formula  "&&"  Formula 
         )
   > right 
       ( right Formula  "\<=\>"  Formula 
@@ -383,9 +384,9 @@ syntax Formula =
     ( non-assoc ifThenElse: "als"  Formula cond  "dan"  Formula then  "anders"  Formula else 
     )
   > on: "wanneer"  TransEvent event  Expr var 
-  > last: "laatste"  Formula form 
-    | first: "eerste"  Formula form 
+  > first: "eerste"  Formula form 
     | next: "volgende"  Formula form 
+    | last: "laatste"  Formula form 
   > right 
       ( right release: Formula first  "laat"  "los"  Formula second 
       )

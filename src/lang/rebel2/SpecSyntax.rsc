@@ -72,7 +72,7 @@ syntax Pred = "pred" Id name "(" {FormalParam ","}* params ")"  "=" Formula form
 syntax Fact = assume: "assume" Id name "=" Formula form ";";
   
 syntax States
-  = "states" ":" StateBlock root
+  = states: "states" ":" StateBlock root
   ;
   
 syntax StateBlock

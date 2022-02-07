@@ -34,6 +34,7 @@ syntax Type_NL
   
 keyword Keywords_NL
   = "module"
+  	 | "toestanden"
      | "nu" 
 	 | "deze" 
 	 | "is"
@@ -69,7 +70,7 @@ keyword Keywords_NL
 	 | "eindig"
 	 | "spoor"
 	 | "controleer"
-	 | "draai"
+	 | "doe"
 	 | "mocks"
 	 ;
 	 
@@ -82,6 +83,10 @@ syntax Modifier_NL
   | final: "finaal"
   | internal: "intern"
   ;
+  
+syntax States_NL
+  = states: "toestanden" ":" X
+  ;  
   
 syntax Fact_NL 
   = assume: "neem" "aan" X "=" X ";";
@@ -106,7 +111,7 @@ syntax Check_NL
 
 syntax Command_NL
   = check: "controleer"
-  | run: "draai"
+  | run: "doe"
   ;
 
 syntax SearchDepth_NL
