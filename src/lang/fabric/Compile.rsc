@@ -1,11 +1,12 @@
-module Compile
+module lang::fabric::Compile
 
-import GradualGrammar;
+import lang::fabric::GradualGrammar;
+import lang::fabric::AST;
+
 import IO;
 import String;
 import List;
 
-import AST;
 
 
 /*

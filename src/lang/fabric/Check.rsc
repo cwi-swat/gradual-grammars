@@ -1,6 +1,6 @@
-module Check
+module lang::fabric::Check
 
-import AST;
+import lang::fabric::AST;
 import Message;
 
 /*

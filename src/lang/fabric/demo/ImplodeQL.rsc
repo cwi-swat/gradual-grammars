@@ -1,10 +1,10 @@
-module ImplodeQL
+module lang::fabric::demo::ImplodeQL
 
-import QL_AST;
-import Implode;
+import lang::fabric::demo::QL_AST;
+import util::Implode;
 import ParseTree;
-import QL_NL_fabric;
-import Stitch;
+import lang::fabric::demo::QL_NL_fabric;
+import lang::fabric::Stitch;
 import IO;
 
 

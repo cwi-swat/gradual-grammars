@@ -1,6 +1,6 @@
-module AST
+module lang::fabric::AST
 
-import GradualGrammar;
+import lang::fabric::GradualGrammar;
 import String;
 import List;
 import ParseTree;

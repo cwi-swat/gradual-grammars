@@ -7,43 +7,13 @@ import IO;
 import String;
 import Set;
 import List;
-import QL; // ref grammar
+import lang::fabric::demo::QL; // ref grammar
 import QL_NL_fabric;
 import util::Maybe;
 import util::Benchmark;
-import lang::rascal::format::Grammar;
-import Implode;
+import util::Implode;
 
 
-void main() {
-  base = QL::reflect();
-  fabric = QL_NL_fabric::reflect();
-  x = stitch(base, fabric, "NL");
-  
-  g = \grammar({\start(sort("Form"))}, x.definitions);
-  
-  str moduleName = "QL_NL";
-  
-  rsc = grammar2rascal(g, moduleName);
-  println(rsc);
-  
-  writeFile(|project://gradual-grammars/src/<moduleName>.rsc|, rsc);
-}
-
-start[Form] testUnravel(start[Form] f) {
-  type[start[Form]] base = QL::reflect();
-  type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
-  return unravel(base, fabric, f, "NL");
-}
-
-tuple[start[Form], int] testItWithTime(start[Form] f) {
-  type[start[Form]] base = QL::reflect();
-  type[start[Form_NL]] fabric = QL_NL_fabric::reflect();
-  int t0 = getMilliTime();
-  start[Form] f2 = unravel(base, fabric, f, "NL");
-  int t1 = getMilliTime();
-  return <f2, t1 - t0>;
-}
 
 
 ASTreorder fabric2reorder(type[&T<:Tree] fabric, str locale, str prefix = "X") {

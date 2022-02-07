@@ -1,4 +1,4 @@
-module QL_NL_fabric
+module lang::fabric::demo::QL_NL_fabric
 
 start syntax Form_NL = form: "formulier" X "{" X "}";
 

@@ -1,4 +1,4 @@
-module GradualGrammar
+module lang::fabric::GradualGrammar
 
 extend lang::std::Layout;
 

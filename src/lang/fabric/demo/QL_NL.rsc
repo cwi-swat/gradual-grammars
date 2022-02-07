@@ -1,4 +1,4 @@
-module QL_NL 
+module lang::fabric::demo::QL_NL 
 lexical String =
   [\"] StrChar* [\"] 
   ;

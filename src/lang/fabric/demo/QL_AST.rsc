@@ -1,4 +1,4 @@
-module QL_AST
+module lang::fabric::demo::QL_AST
 
 
 data Form(loc src=|dummy:///|)

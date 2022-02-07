@@ -1,5 +1,5 @@
 @contributor{Tijs van der Storm - storm@cwi.nl - CWI}
-module QL
+module lang::fabric::demo::QL
 
 extend lang::std::Layout;
 
