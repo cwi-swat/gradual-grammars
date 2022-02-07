@@ -1,0 +1,25 @@
+module Counter
+
+spec Counter
+  i: Integer;
+  
+  start gebeurtenis create()
+    post: this.i' = 0;
+  
+  gebeurtenis inc()
+    post: this.i' = this.i + 1;
+    
+  gebeurtenis dec()
+    post: this.i' = this.i - 1;
+  
+  toestanden:
+    (*) -> active: create;
+    active -> active: inc,dec;
+  
+config Simple = c: Counter is uninitialized;
+
+stel vast Eventually3Later1 = uiteindelijk bestaat c:Counter | c.i = 3 && uiteindelijk c.i = 1;
+doe Eventually3Later1 van Simple in maximaal 7 stappen;  
+
+stel vast EventuallyAlwaysHigherThan3 = uiteindelijk altijd bestaat c:Counter | c.i > 3;
+controleer EventuallyAlwaysHigherThan3 van Simple in maximaal 6 stappen met oneindig spoor;

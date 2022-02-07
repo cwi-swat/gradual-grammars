@@ -1,7 +1,7 @@
 module lang::rebel2::dutch::Rebel2_NL 
 syntax State =
-  "(*)" 
-  | QualifiedName name 
+  QualifiedName name 
+  | "(*)" 
   ;
 
 lexical StringCharacter =
@@ -12,9 +12,9 @@ lexical StringCharacter =
   ;
 
 syntax TransEvent =
-  wildcard: "*" 
+  QualifiedName event \ "empty" 
   | empty: "leeg" 
-  | QualifiedName event \ "empty" 
+  | wildcard: "*" 
   ;
 
 syntax Mocks =
@@ -38,9 +38,9 @@ syntax Fields =
   ;
 
 syntax Objective =
-  minimal: "minimaal"  Expr expr 
-  | finite: "eindig"  "spoor" 
+  finite: "eindig"  "spoor" 
   | maximal: "maximaal"  Expr expr 
+  | minimal: "minimaal"  Expr expr 
   | infinite: "oneindig"  "spoor" 
   ;
 
@@ -66,13 +66,13 @@ syntax SearchDepth =
 
 
 syntax Type =
-  "?"  TypeName tp 
+  \set: "verzameling"  TypeName tp 
   | TypeName tp 
-  | \set: "verzameling"  TypeName tp 
+  | "?"  TypeName tp 
   ;
 
 start syntax Module =
-  ModuleId module  Import* imports  Part+ parts 
+  modul: ModuleId module  Import* imports  Part+ parts 
   ;
 
 syntax Field =
@@ -120,10 +120,10 @@ lexical Id =
   ;
 
 syntax Part =
-  Config cfg 
+  Check chk 
   | "$$PART$$" 
   | Spec spc 
-  | Check chk 
+  | Config cfg 
   | Assert asrt 
   ;
 
@@ -139,30 +139,30 @@ syntax Expr =
     | Lit 
   > nextVal: Expr  "\'" 
   > "-"  Expr 
-  > left 
-      ( left Expr lhs  "*"  Expr rhs 
+  > non-assoc 
+      ( non-assoc Expr lhs  "/"  Expr rhs 
       )
+    | left 
+        ( left Expr lhs  "*"  Expr rhs 
+        )
     | non-assoc 
         ( non-assoc Expr lhs  "%"  Expr rhs 
         )
-    | non-assoc 
-        ( non-assoc Expr lhs  "/"  Expr rhs 
-        )
-  > left 
-      ( left Expr lhs  "+"  Expr rhs 
+  > non-assoc 
+      ( non-assoc Expr lhs  "-"  Expr rhs 
       )
     | left 
         ( left Expr lhs  "++"  Expr rhs 
         )
-    | non-assoc 
-        ( non-assoc Expr lhs  "-"  Expr rhs 
+    | left 
+        ( left Expr lhs  "+"  Expr rhs 
         )
   > "{"  Decl d  "|"  Formula form  "}" 
   ;
 
 syntax Transition =
-  State from  "-\>"  State to  ":"  {TransEvent ","}+ events  ";" 
-  | Id super  "{"  StateBlock child  "}" 
+  Id super  "{"  StateBlock child  "}" 
+  | State from  "-\>"  State to  ":"  {TransEvent ","}+ events  ";" 
   ;
 
 lexical Whitespace =
@@ -175,20 +175,20 @@ syntax Instance =
   ;
 
 syntax Lit =
-  setLit: "{"  {Expr ","}* elems  "}" 
+  Int 
   | StringConstant 
   | this: "deze" 
-  | Int 
   | none: "niks" 
+  | setLit: "{"  {Expr ","}* elems  "}" 
   ;
 
 lexical WhitespaceOrComment =
-  whitespace: Whitespace 
-  | comment: Comment 
+  comment: Comment 
+  | whitespace: Whitespace 
   ;
 
 syntax Modifier =
-  internal: "intern" 
+  internal: "interne" 
   | final: "finaal" 
   | init: "start" 
   ;
@@ -198,9 +198,9 @@ lexical Comment =
   ;
 
 lexical UnicodeEscape =
-  utf32: "\\" [U] ("10" | (  "0"  [0-9 A-F a-f]  )) [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
+  ascii: "\\" [a] [0-7] [0-9 A-F a-f] 
+  | utf32: "\\" [U] ((  "0"  [0-9 A-F a-f]  ) | "10") [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
   | utf16: "\\" [u] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
-  | ascii: "\\" [a] [0-7] [0-9 A-F a-f] 
   ;
 
 syntax Constraints =
@@ -213,8 +213,8 @@ syntax ExpectResult =
   ;
 
 syntax InstanceSetup =
-  Id label  WithAssignments assignments 
-  | {Id ","}+ labels  ":"  Type spec  Mocks? mocks  Forget? forget  InState? inState  WithAssignments? assignments 
+  {Id ","}+ labels  ":"  Type spec  Mocks? mocks  Forget? forget  InState? inState  WithAssignments? assignments 
+  | Id label  WithAssignments assignments 
   ;
 
 syntax Check =
@@ -231,11 +231,10 @@ syntax EventVariant =
   ;
 
 keyword Keywords =
-  "module" 
+  "aan" 
   | "gebeurtenis" 
   | "neem" 
   | "laatste" 
-  | "aan" 
   | "verzameling" 
   | "als" 
   | "controleer" 
@@ -265,6 +264,7 @@ keyword Keywords =
   | "vast" 
   | "voor" 
   | "succes" 
+  | "module" 
   | "toestanden" 
   | "eindig" 
   | "noppes" 
@@ -347,13 +347,13 @@ syntax Formula =
 syntax Formula =
   brackets: "("  Formula  ")" 
   > "!"  Formula form 
-  > nonMembership: Expr  "niet-in"  Expr 
-    | membership: Expr  "in"  Expr 
+  > membership: Expr  "in"  Expr 
+    | nonMembership: Expr  "niet-in"  Expr 
     | sync: Expr spc  "."  QualifiedName event  "("  {Expr ","}* params  ")" 
     | inState: Expr expr  "is"  QualifiedName state 
-  > Expr  "!="  Expr 
+  > Expr  "\<="  Expr 
     | Expr  "\>="  Expr 
-    | Expr  "\<="  Expr 
+    | Expr  "!="  Expr 
     | Expr  "\<"  Expr 
     | Expr  "="  Expr 
     | Expr  "\>"  Expr 
@@ -364,7 +364,7 @@ syntax Formula =
         ( right Formula  "&&"  Formula 
         )
   > right 
-      ( right Formula  "\<=\>"  Formula 
+      ( right Formula  "=\>"  Formula 
       )
     | non-assoc 
         ( non-assoc ifThen: "als"  Formula cond  "dan"  Formula 
@@ -373,7 +373,7 @@ syntax Formula =
         ( non-assoc ifThenElse: "als"  Formula cond  "dan"  Formula then  "anders"  Formula else 
         )
     | right 
-        ( right Formula  "=\>"  Formula 
+        ( right Formula  "\<=\>"  Formula 
         )
   > forAll: "voor"  "alle"  {Decl ","}+  "|"  Formula 
     | exists: "bestaat"  {Decl ","}+  "|"  Formula 
@@ -384,15 +384,15 @@ syntax Formula =
     ( non-assoc ifThenElse: "als"  Formula cond  "dan"  Formula then  "anders"  Formula else 
     )
   > on: "wanneer"  TransEvent event  Expr var 
-  > first: "eerste"  Formula form 
+  > last: "laatste"  Formula form 
+    | first: "eerste"  Formula form 
     | next: "volgende"  Formula form 
-    | last: "laatste"  Formula form 
-  > alwaysLast: "altijd"  "laatste"  Formula form 
+  > right 
+      ( right until: Formula first  "totdat"  Formula second 
+      )
     | eventually: "uiteindelijk"  Formula form 
     | always: "altijd"  Formula form 
-    | right 
-        ( right until: Formula first  "totdat"  Formula second 
-        )
+    | alwaysLast: "altijd"  "laatste"  Formula form 
     | right 
         ( right release: Formula first  "laat"  "los"  Formula second 
         )

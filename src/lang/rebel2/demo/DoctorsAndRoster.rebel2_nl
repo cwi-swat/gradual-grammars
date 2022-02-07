@@ -1,0 +1,44 @@
+module DoctorsAndRoster
+
+spec Doctor
+  interne gebeurtenis goOnCall()
+  interne gebeurtenis goOffCall()
+
+  toestanden:
+    onCall -> offCall: goOffCall; 
+    offCall -> onCall: goOnCall;
+
+spec Roster 
+  doctors: verzameling Doctor;  
+  
+  gebeurtenis goOnCall(d: Doctor)  
+    pre: d in deze.doctors, d.goOnCall();
+    
+  gebeurtenis goOffCall(d: Doctor)
+    pre: 
+      d in deze.doctors, 
+      d.goOffCall(), 
+      bestaat other: deze.doctors | other != d && other is onCall;
+    
+  neem aan InitiallySomeDoctorIsOnCall = eerste bestaat r:Roster, d:r.doctors | d is onCall;  
+    
+  toestanden: 
+    active -> active: goOnCall, goOffCall; 
+    
+stel vast NoDoctersOnCall = uiteindelijk bestaat r:Roster | |r.doctors| > 0 && voor alle d:r.doctors | d is offCall;
+
+stel vast ARosterOfOne = altijd bestaat r:Roster | |r.doctors| = 1; 
+
+stel vast DoctorCanGoOffAndOnCall = uiteindelijk bestaat d: Doctor | 
+  (voor alle other: Doctor | (other != d => (other is offCall && uiteindelijk other is onCall && (uiteindelijk other is offCall)))) 
+  && d is onCall 
+  && uiteindelijk (d is offCall && uiteindelijk d is onCall);
+    
+config ThreeDoctors 
+  = alice,bob,carol: Doctor,
+    r: Roster;
+
+doe NoDoctersOnCall van ThreeDoctors in maximaal 10 stappen verwacht geen spoor;
+doe DoctorCanGoOffAndOnCall van ThreeDoctors in maximaal 7 stappen verwacht spoor;
+
+doe ARosterOfOne van ThreeDoctors in maximaal 0 steps verwacht spoor;

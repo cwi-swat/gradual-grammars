@@ -78,10 +78,14 @@ syntax Constraint_NL
   = unique: "uniek" X
   ;
   
+syntax Event_NL
+  = X "gebeurtenis" X "(" X ")" X
+  ; 
+  
 syntax Modifier_NL
   = init: "start"
   | final: "finaal"
-  | internal: "intern"
+  | internal: "interne"
   ;
   
 syntax States_NL

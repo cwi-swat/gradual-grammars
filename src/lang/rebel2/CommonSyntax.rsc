@@ -3,7 +3,7 @@ module lang::rebel2::CommonSyntax
 extend lang::std::Layout;
 
 start syntax Module
-  = ModuleId module Import* imports Part+ parts
+  = modul: ModuleId module Import* imports Part+ parts
   ;
 
 syntax Part = "$$PART$$"; // only here for extention reasons
