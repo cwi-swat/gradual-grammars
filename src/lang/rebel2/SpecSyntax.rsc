@@ -67,7 +67,7 @@ syntax EventVariantBody
   = Pre? pre Post? post
   ; 
 
-syntax Pred = "pred" Id name "(" {FormalParam ","}* params ")"  "=" Formula form ";";
+syntax Pred = pred: "pred" Id name "(" {FormalParam ","}* params ")"  "=" Formula form ";";
 
 syntax Fact = assume: "assume" Id name "=" Formula form ";";
   

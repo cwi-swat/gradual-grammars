@@ -87,6 +87,10 @@ syntax Modifier_NL
 syntax States_NL
   = states: "toestanden" ":" X
   ;  
+
+syntax Pred_NL
+  = pred: "predikaat" X "(" X ")" "=" X ";"
+  ;
   
 syntax Fact_NL 
   = assume: "neem" "aan" X "=" X ";";
