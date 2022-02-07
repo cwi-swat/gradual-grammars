@@ -1,34 +1,48 @@
 module lang::fabric::demo::Main
 
 import lang::fabric::demo::QL;
+import lang::fabric::demo::ImplodeQL;
 import lang::fabric::demo::QL_NL_fabric;
+import lang::fabric::demo::ParseQL_NL;
 
 import lang::fabric::Stitch;
 
 import IO;
 
 
-
 void main() {
+  type[start[Form]] base = lang::fabric::demo::QL::reflect();
+  type[start[Form_NL]] fabric = lang::fabric::demo::QL_NL_fabric::reflect();
+  
+  dutchQL = |project://gradual-grammars/src/lang/fabric/demo/taxform.qlnl|;
+  
+  pt = parseQL_NL(dutchQL);
+  
+  println("#### Dutch syntax");
+  println(pt);
+  
+  ptBase = unravel(base, fabric, pt, "NL");
+  
+  println("\n#### Unraveled (base-)syntax");
+  println(ptBase);
+  
+  println("\n#### Implode from Dutch");
+  
+  ast = implodeQL_NL(pt);
+  
+  iprintln(ast);
+  
+   
+}
+
+void stitchDutchQL() {
   base = lang::fabric::demo::QL::reflect();
   fabric = lang::fabric::demo::QL_NL_fabric::reflect();
   path = |project://gradual-grammars/src/lang/fabric/demo|;
-  writeStitchedGrammar(base, fabric, "NL", path, "QL_NL"); 
-  //x = stitch(base, fabric, "NL");
-  //
-  //g = \grammar({\start(sort("Form"))}, x.definitions);
-  //
-  //str moduleName = "QL_NL";
-  //
-  //rsc = grammar2rascal(g, moduleName);
-  //println(rsc);
-  //
-  //writeFile(|project://gradual-grammars/src/lang/fabric/demo/<moduleName>.rsc|, rsc);
+  writeStitchedGrammar(base, fabric, "NL", path, "lang::fabric::demo::QL_NL");
 }
 
 start[Form] testUnravel(start[Form] f) {
-  type[start[Form]] base = lang::fabric::demo::QL::reflect();
-  type[start[Form_NL]] fabric = lang::fabric::demo::QL_NL_fabric::reflect();
   return unravel(base, fabric, f, "NL");
 }
 

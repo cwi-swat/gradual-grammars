@@ -1,4 +1,4 @@
-module QL_NL 
+module lang::fabric::demo::QL_NL 
 lexical String =
   [\"] StrChar* [\"] 
   ;
@@ -8,9 +8,9 @@ lexical String =
 
 
 syntax Type =
-  integerType: "getal" 
+  stringType: "tekst" 
+  | integerType: "getal" 
   | booleanType: "waarheidswaarde" 
-  | stringType: "tekst" 
   ;
 
 lexical Label =
@@ -18,9 +18,9 @@ lexical Label =
   ;
 
 syntax Value =
-  Integer 
+  Bool 
   | String 
-  | Bool 
+  | Integer 
   ;
 
 lexical Id =
@@ -36,13 +36,13 @@ lexical Integer =
   ;
 
 keyword Reserved =
-  "op" 
+  "dan" 
   | "tel" 
   | "waar" 
   | "groter" 
   | "bij" 
+  | "op" 
   | "onwaar" 
-  | "dan" 
   | "niet" 
   ;
 
@@ -61,16 +61,16 @@ layout Standard  =
   ;
 
 syntax Question =
-  question: "vraag"  Id var  "met"  Label label  ":"  Type type 
-  | @Foldable group: "{"  Question* questions  "}" 
+  @Foldable group: "{"  Question* questions  "}" 
   | ifThen: "als"  Expr cond  "dan"  ":"  Question!dummy then  () !>> "anders" 
+  | question: "vraag"  Id var  "met"  Label label  ":"  Type type 
   | ifThenElse: "als"  Expr cond  "dan"  ":"  Question then  "anders"  Question els 
   | computed: Label label  Id var  ":"  Type type  "="  Expr expr 
   ;
 
 syntax Expr =
-  bracket "("  Expr  ")" 
-  | var: Id name 
+  var: Id name 
+  | bracket "("  Expr  ")" 
   | \value: Value 
   > not: "niet"  Expr 
   > left 
@@ -82,9 +82,9 @@ syntax Expr =
       | left sub: Expr  "-"  Expr 
       )
   > left 
-      ( left gt: Expr  "groter"  "dan"  Expr 
+      ( left leq: Expr  "\<="  Expr 
       | left lt: Expr  "\<"  Expr 
-      | left leq: Expr  "\<="  Expr 
+      | left gt: Expr  "groter"  "dan"  Expr 
       | left geq: Expr  "\>="  Expr 
       | left neq: Expr  "!="  Expr 
       | left eq: Expr  "=="  Expr 

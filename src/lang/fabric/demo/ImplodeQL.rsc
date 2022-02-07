@@ -1,21 +1,23 @@
 module lang::fabric::demo::ImplodeQL
 
 import lang::fabric::demo::QL_AST;
-import util::Implode;
-import ParseTree;
 import lang::fabric::demo::QL_NL_fabric;
 import lang::fabric::Stitch;
-import IO;
+
+import util::Implode;
+import ParseTree;
 
 
-// todo: deal with start symbol
-Form implode(Tree t, ASTreorder reorder={}) 
-  = implode(#Form, t, reorder=reorder);
-
-void testIt(Tree t) {
-  type[start[Form_NL]] nl = lang::fabric::demo::QL_NL_fabric::reflect();
-  reorder = fabric2reorder(nl, "NL");
-  ast = implode(t, reorder=reorder);
-  iprintln(ast);
+Form implodeQL(Tree t, ASTreorder reorder={}) {
+  if (t.prod.def is \start) {
+     t = t.args[1];
+  }
+  return implode(#Form, t, reorder=reorder);
 }
+
+Form implodeQL_NL(Tree t) {
+  type[start[Form_NL]] nl = lang::fabric::demo::QL_NL_fabric::reflect();
+  return implodeQL(t, reorder=fabric2reorder(nl, "NL"));
+}
+
 

@@ -20,6 +20,10 @@ void writeStitchedGrammar(type[&T<:Tree] base, type[&U<:Tree] fabric,
 	x = stitch(base, fabric, suffix);
 	g = grammar({}, inlineStarts(x.definitions));
 	rsc = grammar2rascal(g, modName);
+	int i = findLast(modName, "::");
+	if (i >= 0) {
+		modName = modName[i+2..];
+	}
 	path.path += "/<modName>.rsc";
 	writeFile(path, rsc);
 }
