@@ -1,0 +1,81 @@
+module CoffeeMachine
+
+spec CoffeeMachine
+  selected: ?CoffeeType,
+  serving: ?CoffeeType,
+  display: String,
+  amountNeeded: Integer;
+   
+  init event powerOn() 
+    post: this.amountNeeded' = 0, this.selected' = none, this.serving' = none, this.display' = "What can I get you?";
+    
+  final event powerOff()
+  
+  event select()
+    variant americano
+      post: this.amountNeeded' = 130, this.selected' = CoffeeType[AMERICANO], this.display' = "Americano - " ++ toStr(this.amountNeeded') ++ " cents left";
+    
+    variant espresso
+      post: this.amountNeeded' = 120, this.selected' = CoffeeType[ESPRESSO], this.display' = "Espresso - " ++ toStr(this.amountNeeded') ++ " cents left";
+    
+    variant normal
+      post: this.amountNeeded' = 95, this.selected' = CoffeeType[NORMAL], this.display' = "Normal - " ++ toStr(this.amountNeeded') ++ " cents left";
+    
+    variant latte  
+      post: this.amountNeeded' = 150, this.selected' = CoffeeType[LATTE], this.display' = "Latte - " ++ toStr(this.amountNeeded') ++ " cents left";
+       
+  event pay(amount: Integer)
+    pre: (amount = 5 || amount = 10 || amount = 20 || amount = 50);
+    post: this.amountNeeded' = this.amountNeeded - amount;
+  
+    variant amountNotMet
+      pre: this.amountNeeded - amount > 0;
+      post: this.display' = toStr(this.amountNeeded'); // ++ " cents left";
+      
+    variant amountMet
+      pre: this.amountNeeded - amount = 0;
+      post: this.selected' = none, this.serving' = this.selected,
+            this.display' = "Serving up a nice cup of coffee!";
+ 
+  event done() 
+    post: this.serving' = none, this.display' = "What can I get you?";
+                    
+  event cancel() 
+    post: this.amountNeeded' = 0, this.selected' = none;
+
+  //func display(selected: CoffeeType, amountLeft: Integer): String = 
+  //  coffeeTypeToStr(selected) ++ amountToStr(amountLeft) ++ " euro left";
+  //
+  //func coffeeTypeToStr(ct: CoffeeType): String
+  //  if (ct = 
+  
+  states:
+    active {
+      waiting -> acceptingPayment: select::americano, select::espresso, select::normal, select::latte;
+      acceptingPayment -> serve: pay::amountMet;
+      acceptingPayment -> acceptingPayment: pay::amountNotMet;
+      acceptingPayment -> waiting: cancel;
+      serve -> waiting: done;
+    }
+    
+    active -> (*): powerOff;  
+    (*) -> active::waiting: powerOn;  
+
+spec CoffeeType[NORMAL,ESPRESSO,AMERICANO,LATTE]
+ 
+config InitialMachine = cm: CoffeeMachine is uninitialized;
+   
+assert MachineIsServing = eventually exists m: CoffeeMachine | m is active::serve;  
+run MachineIsServing from InitialMachine in max 10 steps expect trace;
+
+assert CanServeNormalCoffee  
+  = eventually exists m: CoffeeMachine | m.selected = CoffeeType[NORMAL] && eventually done on m;
+run CanServeNormalCoffee from InitialMachine in max 10 steps expect trace;
+  
+assert MachineWillServeOrCancel = always forall m: CoffeeMachine | (m is active::acceptingPayment => eventually m is active::serve || cancel on m);    
+check MachineWillServeOrCancel from InitialMachine in max 7 steps with infinite trace expect no trace;
+
+assert SimServeLoop = exists m:CoffeeMachine | eventually m is active::serve && eventually m is active::waiting;
+run SimServeLoop from InitialMachine in max 7 steps with infinite trace expect trace;
+
+    
