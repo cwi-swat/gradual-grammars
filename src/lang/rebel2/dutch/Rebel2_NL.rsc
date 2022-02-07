@@ -5,10 +5,10 @@ syntax State =
   ;
 
 lexical StringCharacter =
-  UnicodeEscape 
+  "\\" [\" \' \< \> \\ b f n r t] 
   | [\n] [\t \  \u0240 \U001680 \U002000-\U00200A \U00202F \U00205F \U003000]* [\'] 
-  | "\\" [\" \' \< \> \\ b f n r t] 
   | ![\" \' \< \> \\] 
+  | UnicodeEscape 
   ;
 
 syntax TransEvent =
@@ -38,8 +38,8 @@ syntax Fields =
   ;
 
 syntax Objective =
-  finite: "eindig"  "spoor" 
-  | maximal: "maximaal"  Expr expr 
+  maximal: "maximaal"  Expr expr 
+  | finite: "eindig"  "spoor" 
   | minimal: "minimaal"  Expr expr 
   | infinite: "oneindig"  "spoor" 
   ;
@@ -80,11 +80,11 @@ syntax Field =
   ;
 
 syntax Event =
-  Modifier* modifiers  "event"  Id name  "("  {FormalParam ","}* params  ")"  EventBody body 
+  event: Modifier* modifiers  "gebeurtenis"  Id name  "("  {FormalParam ","}* params  ")"  EventBody body 
   ;
 
 syntax Objectives =
-  with: "with"  {Objective ","}+ objs 
+  with: "met"  {Objective ","}+ objs 
   ;
 
 syntax Constraint =
@@ -131,31 +131,31 @@ syntax Expr =
   brackets: "("  Expr  ")" 
   > var: Id 
     | "|"  Expr  "|" 
-  > reflTrans: Expr  "."  "*"  Id 
+  > functionCall: Id func  "("  {Expr ","}* actuals  ")" 
     | instanceAccess: Expr spc  "["  Id inst  "]" 
-    | functionCall: Id func  "("  {Expr ","}* actuals  ")" 
     | fieldAccess: Expr  "."  Id 
+    | reflTrans: Expr  "."  "*"  Id 
     | trans: Expr  "."  "^"  Id 
     | Lit 
   > nextVal: Expr  "\'" 
   > "-"  Expr 
   > non-assoc 
-      ( non-assoc Expr lhs  "/"  Expr rhs 
+      ( non-assoc Expr lhs  "%"  Expr rhs 
       )
     | left 
         ( left Expr lhs  "*"  Expr rhs 
         )
     | non-assoc 
-        ( non-assoc Expr lhs  "%"  Expr rhs 
+        ( non-assoc Expr lhs  "/"  Expr rhs 
         )
-  > non-assoc 
-      ( non-assoc Expr lhs  "-"  Expr rhs 
+  > left 
+      ( left Expr lhs  "++"  Expr rhs 
       )
     | left 
-        ( left Expr lhs  "++"  Expr rhs 
-        )
-    | left 
         ( left Expr lhs  "+"  Expr rhs 
+        )
+    | non-assoc 
+        ( non-assoc Expr lhs  "-"  Expr rhs 
         )
   > "{"  Decl d  "|"  Formula form  "}" 
   ;
@@ -183,13 +183,13 @@ syntax Lit =
   ;
 
 lexical WhitespaceOrComment =
-  comment: Comment 
-  | whitespace: Whitespace 
+  whitespace: Whitespace 
+  | comment: Comment 
   ;
 
 syntax Modifier =
-  internal: "interne" 
-  | final: "finaal" 
+  final: "finale" 
+  | internal: "interne" 
   | init: "start" 
   ;
 
@@ -199,7 +199,7 @@ lexical Comment =
 
 lexical UnicodeEscape =
   ascii: "\\" [a] [0-7] [0-9 A-F a-f] 
-  | utf32: "\\" [U] ((  "0"  [0-9 A-F a-f]  ) | "10") [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
+  | utf32: "\\" [U] ("10" | (  "0"  [0-9 A-F a-f]  )) [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
   | utf16: "\\" [u] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
   ;
 
@@ -208,8 +208,8 @@ syntax Constraints =
   ;
 
 syntax ExpectResult =
-  trace: "spoor" 
-  | noTrace: "geen"  "spoor" 
+  noTrace: "geen"  "spoor" 
+  | trace: "spoor" 
   ;
 
 syntax InstanceSetup =
@@ -218,7 +218,7 @@ syntax InstanceSetup =
   ;
 
 syntax Check =
-  fromIn: Command cmd  Id name  "from"  Id config  "in"  SearchDepth depth  Objectives? objs  Expect? expect  ";" 
+  fromIn: Command cmd  Id name  "van"  Id config  "in"  SearchDepth depth  Objectives? objs  Expect? expect  ";" 
   ;
 
 syntax Command =
@@ -231,10 +231,10 @@ syntax EventVariant =
   ;
 
 keyword Keywords =
-  "aan" 
-  | "gebeurtenis" 
+  "gebeurtenis" 
   | "neem" 
   | "laatste" 
+  | "aan" 
   | "verzameling" 
   | "als" 
   | "controleer" 
@@ -347,30 +347,30 @@ syntax Formula =
 syntax Formula =
   brackets: "("  Formula  ")" 
   > "!"  Formula form 
-  > membership: Expr  "in"  Expr 
-    | nonMembership: Expr  "niet-in"  Expr 
+  > nonMembership: Expr  "niet-in"  Expr 
+    | membership: Expr  "in"  Expr 
     | sync: Expr spc  "."  QualifiedName event  "("  {Expr ","}* params  ")" 
     | inState: Expr expr  "is"  QualifiedName state 
-  > Expr  "\<="  Expr 
+  > Expr  "\>"  Expr 
     | Expr  "\>="  Expr 
+    | Expr  "\<="  Expr 
     | Expr  "!="  Expr 
     | Expr  "\<"  Expr 
     | Expr  "="  Expr 
-    | Expr  "\>"  Expr 
   > right 
-      ( right Formula  "||"  Formula 
+      ( right Formula  "&&"  Formula 
       )
     | right 
-        ( right Formula  "&&"  Formula 
+        ( right Formula  "||"  Formula 
         )
-  > right 
-      ( right Formula  "=\>"  Formula 
+  > non-assoc 
+      ( non-assoc ifThenElse: "als"  Formula cond  "dan"  Formula then  "anders"  Formula else 
       )
     | non-assoc 
         ( non-assoc ifThen: "als"  Formula cond  "dan"  Formula 
         )
-    | non-assoc 
-        ( non-assoc ifThenElse: "als"  Formula cond  "dan"  Formula then  "anders"  Formula else 
+    | right 
+        ( right Formula  "=\>"  Formula 
         )
     | right 
         ( right Formula  "\<=\>"  Formula 
@@ -384,15 +384,15 @@ syntax Formula =
     ( non-assoc ifThenElse: "als"  Formula cond  "dan"  Formula then  "anders"  Formula else 
     )
   > on: "wanneer"  TransEvent event  Expr var 
-  > last: "laatste"  Formula form 
+  > next: "volgende"  Formula form 
     | first: "eerste"  Formula form 
-    | next: "volgende"  Formula form 
-  > right 
-      ( right until: Formula first  "totdat"  Formula second 
-      )
+    | last: "laatste"  Formula form 
+  > alwaysLast: "altijd"  "laatste"  Formula form 
     | eventually: "uiteindelijk"  Formula form 
     | always: "altijd"  Formula form 
-    | alwaysLast: "altijd"  "laatste"  Formula form 
+    | right 
+        ( right until: Formula first  "totdat"  Formula second 
+        )
     | right 
         ( right release: Formula first  "laat"  "los"  Formula second 
         )

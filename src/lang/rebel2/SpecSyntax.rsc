@@ -34,7 +34,7 @@ syntax Constraint
   ;
   
 syntax Event
-  = Modifier* modifiers "event" Id name "(" {FormalParam ","}* params ")" EventBody body 
+  = event: Modifier* modifiers "event" Id name "(" {FormalParam ","}* params ")" EventBody body 
   ;
 
 syntax Modifier

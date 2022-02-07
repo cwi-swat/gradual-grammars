@@ -79,12 +79,12 @@ syntax Constraint_NL
   ;
   
 syntax Event_NL
-  = X "gebeurtenis" X "(" X ")" X
+  = event: X "gebeurtenis" X "(" X ")" X
   ; 
   
 syntax Modifier_NL
   = init: "start"
-  | final: "finaal"
+  | final: "finale"
   | internal: "interne"
   ;
   
@@ -114,7 +114,7 @@ syntax Assert_NL
   ;
   
 syntax Check_NL
-  = X X "van" X "in" X X X ";"
+  = fromIn: X X "van" X "in" X X X ";"
   ;
 
 syntax Command_NL
@@ -126,6 +126,10 @@ syntax SearchDepth_NL
   = max: "maximaal" X "stappen"
   | exact: "exact" X "stappen"
   ;
+  
+syntax Objectives_NL
+  = with: "met" X
+  ;  
   
 syntax Objective_NL
   = minimal: "minimaal" X

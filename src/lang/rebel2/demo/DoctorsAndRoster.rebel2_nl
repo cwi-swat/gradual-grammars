@@ -41,4 +41,4 @@ config ThreeDoctors
 doe NoDoctersOnCall van ThreeDoctors in maximaal 10 stappen verwacht geen spoor;
 doe DoctorCanGoOffAndOnCall van ThreeDoctors in maximaal 7 stappen verwacht spoor;
 
-doe ARosterOfOne van ThreeDoctors in maximaal 0 steps verwacht spoor;
+doe ARosterOfOne van ThreeDoctors in maximaal 0 stappen verwacht spoor;
