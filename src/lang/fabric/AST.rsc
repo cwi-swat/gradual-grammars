@@ -165,7 +165,9 @@ str toLark(p:aprod(str l, list[ASymbol] ss)) {
   if (p.deprecatedAt >= 0) {
     b += "_DEPRECATED_AT_<p.deprecatedAt>";
   }
-  src += " -\> <b>";
+  if (b != "") {
+    src += " -\> <b>";
+  }
   if (p.error) {
    src += " // error production";
   }

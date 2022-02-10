@@ -63,6 +63,6 @@ syntax Placeholder = "_" !>> [a-zA-Z] [0-9]* !>> [0-9];
 
 lexical Regexp = "/" RegexpChar* "/";
 
-lexical RegexpChar = ![\\/] | [\\][\\ntbrfp/];
+lexical RegexpChar = ![\\/] | [\\][\\ntbrdfp.\-/];
 
  

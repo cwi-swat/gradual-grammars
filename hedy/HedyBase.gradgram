@@ -13,17 +13,17 @@ _EQUALS = _SPACE? "=" _SPACE? //always allow = to be surrounded by spaces
 start = program: _EOL* (command _EOL+)* command?
 
 command  
-  = print: _PRINT (_SPACE text)?
-  | ask: _ASK (_SPACE text)?
-  | echo: _ECHO (_SPACE text)?
+  = print: "print" (_SPACE text)?
+  | ask: "ask" (_SPACE text)?
+  | echo: "echo" (_SPACE text)?
   | turtle: turtle 
   | comment: _HASH /([^\n]+)/
-  | @error invalid_space: _SPACE text?
-  | @error invalid: textwithoutspaces text?
+  | @error error_invalid_space: _SPACE text?
+  | @error error_invalid: textwithoutspaces text?
 
 turtle 
-  = forward: _FORWARD (_SPACE (text | NUMBER))?
-  | turn: _TURN (_SPACE text)?
+  = forward: "forward" (_SPACE (text | NUMBER))?
+  | turn: "turn" (_SPACE text)?
 
 _EOL = "\r"?"\n"
 
@@ -45,19 +45,21 @@ level 2
 
 remove echo
 
+_IS = "is" | "="
+
 command 
   = assign: var _SPACE _IS _SPACE text  
-  | @override print: _PRINT (_SPACE _print_argument)?
-  | @override ask: var _SPACE _IS _SPACE _ASK (_SPACE + (_SPACE | text_ask | punctuation)*)?
-  | sleep: _SLEEP (_SPACE INT)?
-  | @error ask_dep_2: _ASK (_SPACE error_text_dep_2)?
-  | @error echo_dep_2: _ECHO (_SPACE error_text_dep_2)?
-  | @error text_dep_2: /([^\n]+)/ -> text //anything can be parsed except for a newline
+  | @override print: "print" (_SPACE _print_argument)?
+  | @override ask: var _SPACE _IS _SPACE "ask" (_SPACE + (_SPACE | text_ask | punctuation)*)?
+  | sleep: "sleep" (_SPACE INT)?
+  | @error error_ask_dep_2: "ask" (_SPACE error_text_dep_2)?
+  | @error error_echo_dep_2: "echo" (_SPACE error_text_dep_2)?
+  | @error error_text_dep_2: /([^\n]+)/ -> text //anything can be parsed except for a newline
   
 
 turtle
-  = @override forward: _FORWARD (_SPACE (INT | textwithoutspaces))? 
-  | @override turn: _TURN (_SPACE (textwithoutspaces))? -> turn
+  = @override forward: "forward" (_SPACE (INT | textwithoutspaces))? 
+  | @override turn: "turn" (_SPACE (textwithoutspaces))? -> turn
 
 _print_argument = print_arg: (_SPACE | textwithoutspaces | punctuation)*
 
@@ -79,8 +81,8 @@ level 3
 command 
   = @override assign: var _SPACE _IS _SPACE (list_access | text) 
   | assign_list: var _SPACE _IS _SPACE text_list (_COMMA text_list)+
-  | add: _ADD_LIST _SPACE some_spaces _SPACE _TO_LIST _SPACE var
-  | remove: _REMOVE _SPACE some_spaces _SPACE _FROM _SPACE var
+  | add: "add" _SPACE some_spaces _SPACE "to" _SPACE var
+  | remove: "remove" _SPACE some_spaces _SPACE "from" _SPACE var
   
 
    
@@ -90,11 +92,11 @@ _print_argument
 
 text_list = text: /([^\r\n,،]+)/  // list elements may contain punctuation but not commas or course, these are separators
 
-list_access = list_access: var _SPACE _AT _SPACE (INT | random) 
+list_access = list_access: var _SPACE "at" _SPACE (INT | random) 
 
 turtle 
-  = @override forward: _FORWARD (_SPACE (INT | list_access | textwithoutspaces))?  
-  | @override turn: _TURN (_SPACE (list_access | textwithoutspaces))?
+  = @override forward: "forward" (_SPACE (INT | list_access | textwithoutspaces))?  
+  | @override turn: "turn" (_SPACE (list_access | textwithoutspaces))?
 
 // FH, jan 22: not exactly sure why this works, while textwithoutspaces parses the whole line in add/remove
 // leaving this for now
@@ -104,11 +106,11 @@ level 4
 
 // redifining it entirely since it has many order-depending rules (e.g ask_no_quotes should be after ask and before assign)
 command
-  = @override print:  _PRINT (_SPACE _print_argument)?
-  | @override ask:  var _SPACE _IS _SPACE _ASK (_SPACE _print_argument)?
-  | @error ask_no_quotes: var _SPACE _IS _SPACE _ASK _SPACE text  -> error_print_nq
+  = @override print:  "print" (_SPACE _print_argument)?
+  | @override ask:  var _SPACE _IS _SPACE "ask" (_SPACE _print_argument)?
+  | @error error_ask_no_quotes: var _SPACE _IS _SPACE "ask" _SPACE text  -> error_ask_nq
   | @override assign: var _SPACE _IS _SPACE (list_access | text) // TVDS: ugly, but needed for ordering. 
-  | @error print_no_quotes: _PRINT _SPACE text -> error_print_nq
+  | @error error_print_no_quotes: "print" _SPACE text -> error_print_nq
 
 
 _print_argument = @override print_arg: (_SPACE | list_access | quoted_text | var_access)*
@@ -131,19 +133,21 @@ quoted_text = text: /'((?:[^\\']|\\.)*)'/  //text can be between single quotes, 
 
 level 5
 
+
+remove error_invalid
+
 program = _EOL* (command | error_invalid) (_SPACE)* (_EOL+ (command | error_invalid) (_SPACE)*)* _EOL* //lines may end on spaces and might be separated by many newlines
 
 
-remove error_invalid
 
 command
   = ifelse: _IF _SPACE condition (_SPACE|_EOL*) command (_SPACE|_EOL*) _ELSE (_SPACE|_EOL*) command
   | ifs: _IF _SPACE condition (_SPACE|_EOL*) command //'if' cannot be used in Python, hence the name of the rule is 'ifs'
-  | list_access_var: var _SPACE _IS _SPACE var _SPACE _AT _SPACE (INT | random)
+  | list_access_var: var _SPACE _IS _SPACE var _SPACE "at" _SPACE (INT | random)
   | assign_list: var _SPACE _IS _SPACE textwithspaces (_COMMA textwithspaces)+
   | assign: var _SPACE _IS _SPACE textwithspaces
-  | @error invalid: textwithoutspaces (_SPACE textwithspaces)?
-  | @error print_no_quotes: _PRINT _SPACE (textwithoutspaces | list_access | var) (_SPACE (textwithoutspaces | list_access | var))*  -> error_print_nq
+  | @error error_invalid: textwithoutspaces (_SPACE textwithspaces)?
+  | @error error_print_no_quotes: "print" _SPACE (textwithoutspaces | list_access | var) (_SPACE (textwithoutspaces | list_access | var))*  -> error_print_nq
 
     
 condition
@@ -163,4 +167,90 @@ textwithoutspaces
 //anything can be parsed except for spaces (plus: a newline and a comma for list separators)
 //the part e(?!lse)|i(?!f)) means e not followed by lse, and i not followed by f
 // this is because allowing else and if in invalid leads to ambiguity in the grammar                                            
+
+level 6
+
+remove ask, list_access, assign, assign_list, equality_check
+
+
+_print_argument = @override print_arg: (_SPACE | quoted_text | list_access | var_access | sum)*
+
+//splitting  these commands into two rules, one for equals and one for is so they can be properly handled in the translator
+
+
+command 
+  = ask_is: var _SPACE _IS _SPACE "ask" (_SPACE _print_argument)?
+  | ask_equals: var _EQUALS "ask" (_SPACE _print_argument)?
+  | list_access_var_equals: var _EQUALS var _SPACE "at" _SPACE (INT | random)
+  | list_access_var_is: var _SPACE _IS _SPACE var _SPACE "at" _SPACE (INT | random)
+  | assign_is: var _SPACE _IS _SPACE sum | var _SPACE _IS _SPACE textwithoutspaces
+  | assign_equals: var _EQUALS sum | var _EQUALS textwithoutspaces
+  | assign_list_is: var _SPACE _IS _SPACE textwithspaces (_COMMA textwithspaces)+
+  | assign_list_equals: var _EQUALS textwithspaces (_COMMA textwithspaces)+
+  
+
+condition
+  = equality_check_is: textwithoutspaces _SPACE _IS _SPACE textwithoutspaces (_SPACE textwithoutspaces)*
+  | equality_check_equals: textwithoutspaces _EQUALS textwithoutspaces (_SPACE textwithoutspaces)*
+
+
+sum 
+  = product 
+  | addition: sum _SPACE* "+" _SPACE* product  
+  | subtraction: sum _SPACE* "-" _SPACE* product
+  
+product  
+  = atom
+  | multiplication: product _SPACE* "*" _SPACE* atom 
+  | division: product _SPACE* "/" _SPACE* atom 
+
+atom = INT 
+  | var_access 
+  | @error error_unsupported_number: /([-+]?(\d+[\.,]\d+))/ -> error_unsupported_number
+   
+   //TODO: means we cannot assign strings with spaces? would we want that?
+
+textwithoutspaces
+  = @override text: /(?:[^\n, *+\-\/ei]|e(?!lse)|i(?!f))+/  //new cause in level 5 calculation elements need to be escaped too                
+  
+
+level 7
+
+remove error_print_no_quotes
+
+command
+ = repeat: "repeat" _SPACE (INT | var) _SPACE "times" _SPACE command
+
+level 8
+
+remove ifelse, ifs
+
+
+command 
+  = ifs: "if" _SPACE condition _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+  | elses: _EOL (_SPACE)* "else" (_SPACE)* _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+  | @override repeat: "repeat" _SPACE (INT | var) _SPACE "times" _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+
+
+
+level 9
+
+// no additions to the grammar because we now allow nested blocks
+// which is done in the transpiler
+
+level 10
+
+//TODO: Maybe this should be called for_list instead of repeat_list? I find thi a bit confusing myself (FH, Nov 2021)
+command
+  = repeat_list: "for" _SPACE var _SPACE "in" _SPACE var _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+  
+level 11
+
+remove repeat, turtle
+
+command
+  = for_loop: "for" _SPACE (NAME | var) _SPACE "in" _SPACE _RANGE _SPACE (INT | var) _SPACE "to" _SPACE (INT | var) _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+  
+
+
 
