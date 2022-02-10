@@ -38,6 +38,18 @@ turtle: _FORWARD  (_SPACE  (INT | list_access | textwithoutspaces))? -> forward
 
 some_spaces: /([^\r\n!?. ]+)/  (_SPACE  /([^\r\n!?. ]+)/)* -> text_with_spaces
 
+_print_argument: (_SPACE | list_access | quoted_text | var_access)* -> print_arg
+
+var_access: NAME -> 
+
+text: /([^\n,]+)/ -> text
+
+quoted_text_no_escape: /'([^']*)'/ -> text
+
+quoted_text: /'((?:[^\\']|\\.)*)'/ -> text
+
+program: _EOL*  (command | error_invalid)  (_SPACE)*  (_EOL+  (command | error_invalid)  (_SPACE)*)*  _EOL*  remove  error_invalid -> 
+
 command: _PRINT  (_SPACE  _print_argument)? -> print
 	| var  _SPACE  _IS  _SPACE  _ASK  (_SPACE  _print_argument)? -> ask
 	| turtle -> turtle
@@ -47,6 +59,11 @@ command: _PRINT  (_SPACE  _print_argument)? -> print
 	| var  _SPACE  _IS  _SPACE  text_list  (_COMMA  text_list)+ -> assign_list
 	| _ADD_LIST  _SPACE  some_spaces  _SPACE  _TO_LIST  _SPACE  var -> add
 	| _REMOVE  _SPACE  some_spaces  _SPACE  _FROM  _SPACE  var -> remove
+	| _IF  _SPACE  condition  (_SPACE | _EOL*)  command  (_SPACE | _EOL*)  _ELSE  (_SPACE | _EOL*)  command -> ifelse
+	| _IF  _SPACE  condition  (_SPACE | _EOL*)  command -> ifs
+	| var  _SPACE  _IS  _SPACE  var  _SPACE  _AT  _SPACE  (INT | random) -> list_access_var
+	| var  _SPACE  _IS  _SPACE  textwithspaces  (_COMMA  textwithspaces)+ -> assign_list
+	| var  _SPACE  _IS  _SPACE  textwithspaces -> assign
 	| _SPACE  text? -> invalid_space // error production
 	| textwithoutspaces  text? -> invalid // error production
 	| _ASK  (_SPACE  error_text_dep_2)? -> ask_dep_2 // error production
@@ -54,15 +71,14 @@ command: _PRINT  (_SPACE  _print_argument)? -> print
 	| /([^\n]+)/ -> text // error production
 	| var  _SPACE  _IS  _SPACE  _ASK  _SPACE  text -> error_print_nq // error production
 	| _PRINT  _SPACE  text -> error_print_nq // error production
+	| textwithoutspaces  (_SPACE  textwithspaces)? -> invalid // error production
+	| _PRINT  _SPACE  (textwithoutspaces | list_access | var)  (_SPACE  (textwithoutspaces | list_access | var))* -> error_print_nq // error production
 
-_print_argument: (_SPACE | list_access | quoted_text | var_access)* -> print_arg
+condition: textwithoutspaces  _SPACE  _IS  _SPACE  textwithoutspaces  (_SPACE  textwithoutspaces)* -> equality_check
+	| textwithoutspaces  _SPACE  _IN  _SPACE  var -> in_list_check
 
-var_access: NAME -> 
+nospace: /[^\n, ]/ -> 
 
-textwithoutspaces: /([^\r\n, *+-\/]+)/ -> text
+textwithspaces: /(?:[^\n،, ]| (?!else))+/ -> text
 
-text: /([^\n,]+)/ -> text
-
-quoted_text_no_escape: /'([^']*)'/ -> text
-
-quoted_text: /'((?:[^\\']|\\.)*)'/ -> text
+textwithoutspaces: /(?:[^\n،, ei]|e(?!lse)|i(?!f))+/ -> text

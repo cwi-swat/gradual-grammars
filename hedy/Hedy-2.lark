@@ -34,7 +34,7 @@ command: _PRINT  (_SPACE  _print_argument)? -> print
 turtle: _FORWARD  (_SPACE  (INT | textwithoutspaces))? -> forward
 	| _TURN  (_SPACE  (textwithoutspaces))? -> turn
 
-_print_argument: (_SPACE | textwithoutspaces | punctuation)* -> 
+_print_argument: (_SPACE | textwithoutspaces | punctuation)* -> print_arg
 
 textwithoutspaces: /([^\r\n!?. ]+)/ -> text
 
