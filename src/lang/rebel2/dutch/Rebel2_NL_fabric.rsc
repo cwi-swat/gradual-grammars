@@ -148,4 +148,4 @@ syntax ExpectResult_NL
   ;
   
 
-type[start[Module]] reflect() = #start[Module];
+type[start[Module_NL]] reflect() = #start[Module_NL];

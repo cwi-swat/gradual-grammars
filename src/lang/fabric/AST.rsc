@@ -4,6 +4,7 @@ import lang::fabric::GradualGrammar;
 import String;
 import List;
 import ParseTree;
+import IO;
 
 data AGrammar(str ws = "", str base = "", loc src = |file:///dummy|)
   = agrammar(str name, list[Import] imports, list[ALevel] levels);
@@ -108,13 +109,20 @@ ARule implode(r:(Rule)`<Nonterminal nt> = <{Prod "|"}+ ps>`)
   = arule("<nt>", [ implode(p) | Prod p <- ps ], src=r@\loc);
 
 AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss>`)
-  = implodeProd(ms, l, ss, "", p@\loc);
+  = implodeProd(ms, "<l>", ss, "", p@\loc);
   
 AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss> -\> <Label b>`)
-  = implodeProd(ms, l, ss, "<b>", p@\loc);
+  = implodeProd(ms, "<l>", ss, "<b>", p@\loc);
+
+
+AProd implode(p:(Prod)`<Modifier* ms> <Sym* ss> -\> <Label b>`)
+  = implodeProd(ms, "", ss, "<b>", p@\loc);
+
+AProd implode(p:(Prod)`<Modifier* ms> <Sym* ss>`)
+  = implodeProd(ms, "", ss, "", p@\loc);
   
-AProd implodeProd(Modifier* ms, Label l, Sym* ss, str binding, loc src) {
-  AProd p = aprod("<l>", [ implode(s) | Sym s <- ss ] , binding=binding);
+AProd implodeProd(Modifier* ms, str l, Sym* ss, str binding, loc src) {
+  AProd p = aprod(l, [ implode(s) | Sym s <- ss ] , binding=binding);
   if ((Modifier)`@override` <- ms) {
     p.override = true;
   }

@@ -25,7 +25,9 @@ syntax Nonterminal = @category="Identifier" Id;
 
 syntax Rule = Nonterminal nt "=" {Prod "|"}+ prods;
 
-syntax Prod = Modifier* Label label ":" Sym* syms Binding?;
+syntax Prod 
+  = Modifier* Label label ":" Sym!alt* syms Binding?
+  | Modifier* Sym!alt* syms Binding?;
 
 syntax Binding = "-\>" Label; 
 
@@ -57,10 +59,10 @@ lexical Nat = [0-9]+ !>> [0-9];
 
 lexical String = [\"]![\"]*[\"];
 
-syntax Placeholder = "_"[0-9]* !>> [0-9];
+syntax Placeholder = "_" !>> [a-zA-Z] [0-9]* !>> [0-9];
 
 lexical Regexp = "/" RegexpChar* "/";
 
-lexical RegexpChar = ![\\/] | [\\][\\ntbfp/];
+lexical RegexpChar = ![\\/] | [\\][\\ntbrfp/];
 
  

@@ -180,8 +180,12 @@ list[Tree] unravel(list[Symbol] ref, list[Symbol] fabric, list[Tree] args, str p
   
   @memo
   Maybe[tuple[Production, Production]] lookup(str l, str nt) {
-    if (/bp:prod(label(l, sort(nt)), _, _) := ref.definitions[sort(nt)], 
-        /fp:prod(label(l, sort(/<nt>_<locale>/)), _, _) := fabric.definitions[sort("<nt>_<locale>")]) { 
+  	Symbol baseSym = sort(nt);
+  	Symbol fabSym = sort("<nt>_<locale>");
+  	
+    if (baseSym in ref.definitions, /bp:prod(label(l, sort(nt)), _, _) := ref.definitions[baseSym],
+    	fabSym in fabric.definitions, 
+        /fp:prod(label(l, sort(/<nt>_<locale>/)), _, _) := fabric.definitions[fabSym]) { 
         return just(<bp, fp>);
     }
     return nothing();
@@ -202,7 +206,8 @@ list[Tree] unravel(list[Symbol] ref, list[Symbol] fabric, list[Tree] args, str p
         }
         return appl(p, args);
       }
-      case appl(p:prod(sort(str nt), _, {_*, \bracket()}), list[Tree] args): {
+      // recurse into unlabeled productions.
+      case appl(p:prod(sort(str nt), _, _), list[Tree] args): {
         args = [ rewrite(a) | Tree a <- args ];
         return appl(p, args);
       }
