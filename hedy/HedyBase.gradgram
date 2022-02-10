@@ -17,7 +17,7 @@ command
   | ask: "ask" (_SPACE text)?
   | echo: "echo" (_SPACE text)?
   | turtle: turtle 
-  | comment: _HASH /([^\n]+)/
+  | comment: "#" /([^\n]+)/
   | @error error_invalid_space: _SPACE text?
   | @error error_invalid: textwithoutspaces text?
 
@@ -141,8 +141,8 @@ program = _EOL* (command | error_invalid) (_SPACE)* (_EOL+ (command | error_inva
 
 
 command
-  = ifelse: _IF _SPACE condition (_SPACE|_EOL*) command (_SPACE|_EOL*) _ELSE (_SPACE|_EOL*) command
-  | ifs: _IF _SPACE condition (_SPACE|_EOL*) command //'if' cannot be used in Python, hence the name of the rule is 'ifs'
+  = ifelse: "if" _SPACE condition (_SPACE|_EOL*) command (_SPACE|_EOL*) "else" (_SPACE|_EOL*) command
+  | ifs: "if" _SPACE condition (_SPACE|_EOL*) command //'if' cannot be used in Python, hence the name of the rule is 'ifs'
   | list_access_var: var _SPACE _IS _SPACE var _SPACE "at" _SPACE (INT | random)
   | assign_list: var _SPACE _IS _SPACE textwithspaces (_COMMA textwithspaces)+
   | assign: var _SPACE _IS _SPACE textwithspaces
@@ -188,6 +188,7 @@ command
   | assign_list_is: var _SPACE _IS _SPACE textwithspaces (_COMMA textwithspaces)+
   | assign_list_equals: var _EQUALS textwithspaces (_COMMA textwithspaces)+
   
+ 
 
 condition
   = equality_check_is: textwithoutspaces _SPACE _IS _SPACE textwithoutspaces (_SPACE textwithoutspaces)*

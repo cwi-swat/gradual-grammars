@@ -154,13 +154,14 @@ list[AProd] sortProductions(list[AProd] ps)
   + [ p | AProd p <- ps, p.deprecatedAt >= 0 ]
   + [ p | AProd p <- ps, p.error ];
 
-// todo: sorting, error prods should be at end
 str toLark(arule(str nt, list[AProd] prods))
   = "<nt>: <intercalate("\n\t| ", [ toLark(p) | AProd p <- sortProductions(prods) ])>\n";
 
 
 str toLark(p:aprod(str l, list[ASymbol] ss)) {
   str src = "<intercalate(" ", [ toLark(s) | ASymbol s <- ss ])>";
+  
+  
   str b = p.binding != "" ? p.binding : l;
   if (p.deprecatedAt >= 0) {
     b += "_DEPRECATED_AT_<p.deprecatedAt>";
@@ -171,6 +172,7 @@ str toLark(p:aprod(str l, list[ASymbol] ss)) {
   if (p.error) {
    src += " // error production";
   }
+  
   return src;
 }
 

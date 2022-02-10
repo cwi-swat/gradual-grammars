@@ -78,6 +78,7 @@ list[&T] interleave(&T elt, list[&T] lst)
   
 @doc{Interleave layout inbetween all sequences of symbols (requires normalize)}
 ALevel interleaveLayout(ASymbol sym, ALevel level) {
+  return level;
   return visit (level) {
     case AProd p => p[symbols = interleave(sym, p.symbols)]
     case seq(list[ASymbol] ss) => seq(interleave(sym, ss))
@@ -124,7 +125,9 @@ ALevel merge(list[ALevel] levels) {
          }
        }
        // add back again.
-       merged.rules += [theRule];
+       if (theRule.prods != []) {
+         merged.rules += [theRule];
+       }
      }
   }
   return merged;
