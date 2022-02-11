@@ -257,3 +257,96 @@ in_list_check = (var | text_in_quotes | NUMBER) _SPACE "in" _SPACE var
 error_invalid = "Supercalifragilisticexpialidocious" //invalid node should be deleted but this probably never matches anything :D
 textwithspaces = /(?:[^\n,' ]| (?!else))+/ -> text //anything can be parsed except for a newline and a comma for list separators, and now single quotes
 text_in_quotes = "'" textwithspaces "'"
+
+
+level 13
+
+ifs = "if" _SPACE (condition|andcondition|orcondition) _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK //'if' cannot be used in Python, hence the name of the rule is 'ifs'
+
+andcondition = (condition) (_SPACE "and" _SPACE condition)*
+orcondition = (condition) (_SPACE "or" _SPACE condition)*
+
+level 14
+
+// adds comparisons
+
+condition += equality_check_dequals | smaller | bigger | not_equal | smaller_equal | bigger_equal
+
+equality_check_is = comparison_arg _SPACE? "is" _SPACE? comparison_arg
+equality_check_equals = comparison_arg "=" comparison_arg
+equality_check_dequals = comparison_arg _SPACE? "==" _SPACE? comparison_arg
+smaller = comparison_arg _SPACE? "<" _SPACE? comparison_arg
+bigger = comparison_arg _SPACE? ">" _SPACE? comparison_arg
+smaller_equal = comparison_arg _SPACE? "<=" _SPACE? comparison_arg
+bigger_equal = comparison_arg _SPACE? ">=" _SPACE? comparison_arg
+not_equal = comparison_arg _SPACE? "!=" _SPACE? comparison_arg
+
+?comparison_arg = var | text_in_quotes | NUMBER
+
+level 15
+
+// adds the while loop
+
+
+command += while_loop
+
+while_loop = "while" _SPACE (condition) _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+
+level 16
+
+// adds list access with numbers and brackets
+
+// TODO for tomorrow: this stills needs tests in level 16 for > and !=
+?comparison_arg = var | text_in_quotes | NUMBER | list_access
+
+?atom = NUMBER | var | list_access | error_unsupported_number
+list_access = var "[" (INT | random | var) "]"
+change_list_item = var "[" (INT | var) "]" "=" (var | textwithoutspaces)
+assign_list_is = var _SPACE "is" _SPACE "[" (quoted_text | INT) (_COMMA (quoted_text | INT))+ "]"
+assign_list_equals = var "=" "[" (quoted_text | INT) (_COMMA (quoted_text | INT))+ "]"
+
+level 17
+
+command += ifs (elifs)* elses? -= ifs elses?
+
+//spaces are allowed before and after colon
+//TODO: this could be an attribute on the rule that we add in the merger
+_COLON = _SPACE* ":" _SPACE*
+
+elses = _EOL _SPACE* "else" _COLON _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+//TODO: after condition a space (or more) could also be ok? Python allows that
+
+ifs = "if" _SPACE (condition|andcondition|orcondition) ":" _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK//'if' cannot be used in Python, hence the name of the rule is 'ifs'
+
+// TODO: FH, jan 2022 (condition|andcondition|orcondition) could be made into a rule (also in use in level 13)
+elifs = _EOL _SPACE* "elif" _SPACE (condition|andcondition|orcondition) _COLON _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+
+for_loop = "for" _SPACE (NAME | var) _SPACE "in" _SPACE "range" _SPACE (INT | var) _SPACE "to" _SPACE (INT | var) _COLON _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+
+while_loop = "while" _SPACE (condition) _COLON _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+
+
+repeat_list = "for" _SPACE var _SPACE "in" _SPACE var _COLON _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+
+level 18
+
+// adds round brackets in print() and range(), and changes ask to input
+
+command += input_is | input_equals | input_is_empty_brackets |  input_equals_empty_brackets | print_empty_brackets 
+  -= ask > assign_is | assign_equals
+
+print = "print" (_SPACE* "(" _SPACE* (quoted_text | list_access | var_access | sum) (_COMMA (quoted_text | list_access | var_access | sum))* _SPACE* ")" _SPACE*)?
+
+print_empty_brackets = "print" _SPACE* "(" _SPACE* ")"
+input_is_empty_brackets = var _SPACE "is" _SPACE "input" _SPACE* ("(" _SPACE? ")")
+input_equals_empty_brackets = var _SPACE* "=" _SPACE* "input" _SPACE* ("(" _SPACE* ")")
+input_is = var _SPACE "is" _SPACE "input" _SPACE* ("("  ((quoted_text | list_access | var_access | sum) (_SPACE (quoted_text | list_access | var_access | sum))*) ")")?
+input_equals = var _SPACE* "=" _SPACE* "input" _SPACE* ("("  ((quoted_text | list_access | var_access | sum) (_SPACE (quoted_text | list_access | var_access | sum))*) ")")?
+
+// todo: some of these vars sould alse be var_access (things that do not define like the loop var)
+for_loop = "for" _SPACE (NAME | var) _SPACE "in" _SPACE "range" "(" (NUMBER | var) _COMMA (NUMBER | var) (_COMMA (NUMBER | var))? ")" _COLON _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+
+
+
+
+
