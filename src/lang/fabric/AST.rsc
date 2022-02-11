@@ -89,11 +89,17 @@ ASymbol implode((Sym)`<Sym s>*`)
 ASymbol implode((Sym)`<Sym s>+`) 
   = reg(implode(s), opt=false, many=true);
   
+  
 ASymbol implode((Sym)`_`)
   = placeholder();
   
 default ASymbol implode((Sym)`<Placeholder p>`)
   = placeholder(pos = toInt("<p>"[1..]));
+
+default ASymbol implode(Sym s) {
+  iprintln(s);
+  throw "error";
+}
   
 ALevel implode(t:(Level)`level <Nat n> remove <{Label ","}+ ls> <Rule* rs>`)
   = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ], [], 

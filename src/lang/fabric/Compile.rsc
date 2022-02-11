@@ -103,13 +103,15 @@ ALevel merge(list[ALevel] levels) {
      for (ARule r <- l.rules) {
        ARule theRule = adefine(r.nt, []);
        
-       if (r is amodify, ARule existing <- merged.rules, existing.nt == r.nt) {
-         theRule = existing;
-         // temporary removal
-         merged.rules = delete(merged.rules, indexOf(merged.rules, existing));
+       if (ARule existing <- merged.rules, existing.nt == r.nt) {
+         if (r is amodify) { 
+            theRule = existing;
+         }
+         merged.rules = delete(merged.rules, indexOf(merged.rules, existing));  
        }
        
        for (AProd p <- r.prods) {
+       
          
          if (p.label in l.deprecate) {
            println("LOG: deprecating <p.label>");
@@ -125,14 +127,12 @@ ALevel merge(list[ALevel] levels) {
            }
          }
          
-	     
-	     theRule.prods += [p];
-
+  	     theRule.prods += [p];
        }
        
        if (r is amodify) {
-         theRule.prods = [ p2 | AProd p2 <- theRule.prods, AProd p0 <- r.removals, p2.symbols != p0.symbols ];
-         theRule.prods = [ p2 | AProd p2 <- theRule.prods, AProd p0 <- r.moveToEnd, p2.symbols != p0.symbols ];
+         theRule.prods -= [ p2 | AProd p2 <- theRule.prods, AProd p0 <- r.removals, p2.symbols == p0.symbols ];
+         theRule.prods -= [ p2 | AProd p2 <- theRule.prods, AProd p0 <- r.moveToEnd, p2.symbols == p0.symbols ];
          theRule.prods += r.moveToEnd;
        }
        

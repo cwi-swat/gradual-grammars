@@ -24,8 +24,10 @@ syntax Literal = @category="StringLiteral" String;
 
 syntax Label = @category="Constant" Id;
 
-syntax Nonterminal = @category="Identifier" Id;
-
+syntax Nonterminal 
+  = @category="Identifier" Id
+  | @category="Identifier" "?" >> [a-zA-Z] Id;
+  
 syntax Rule 
   = modify: Nonterminal nt "+=" {Prod "|"}+ prods Removals? MoveToEnd?
   | normal: Nonterminal nt "=" {Prod "|"}+ prods 
@@ -59,7 +61,7 @@ syntax Sym
   | "(" Sym* ")"
   | "{" Sym Literal "}" "*"
   | "{" Sym Literal "}" "+"
-  | Sym "?"
+  | Sym "?" !>> [a-zA-Z]
   | Sym "+"
   | Sym "*"
   > left alt: Sym "|" Sym
