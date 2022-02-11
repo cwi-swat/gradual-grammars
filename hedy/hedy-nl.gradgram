@@ -2,34 +2,38 @@ module HedyNL
 
 modifies "hedy.gradgram"
 
+locale nl
+
 level 1
 
-command
-  = print: "print" _ "uit"
-  | ask: "vraag" _
-  | forward: "vooruit" "dus" _ "met" "de" "geit"
-  | turn: "draai" _
+ask = "vraag" _
+
+turtle
+  = ("vooruit"|"forward") _
+  | ("draai"|"turn") _
+
   
+ 
+ 
+
 level 2
 
-command
-  = print: "print" _ "uit"
-  | ask: _ "krijgt" "vraag" _
-  | assign: "ken" _2 "toe" "aan" _1
-  | forward: "vooruit" _
-  | turn: "draai" _
-  
-command
-  = print: "print" _ "uit"
-  | ask: _ "krijgt" "vraag" _
+ask = _ _ "is" _ "vraag" _
+
+sleep = ("slaap"|"sleep") _
+
+level 3
+
+random = ("willekeurig"|"random")
+
+list_access = _ _ "op" _ _
+
+add = ("voeg"|"add") _ _ _ ("toe aan"|"to") _ _
+
+remove = ("verwijder"|"remove") _ _ _ ("uit"|"from") _ _
+
+
   
 level 4
 
-command
-  = if: "als" _ "dan" _
-  | ifelse: "als" _ "dan" _ "anders" _
-  
-condition
-  = is: _ "is" _ ("en" _)*
-  | in: _ "in" _ ("en" _)*
     
