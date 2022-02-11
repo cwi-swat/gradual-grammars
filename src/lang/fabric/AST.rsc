@@ -6,7 +6,7 @@ import List;
 import ParseTree;
 import IO;
 
-data AGrammar(str ws = "", str base = "", str prefix="", loc src = |file:///dummy|)
+data AGrammar(str ws = "", str base = "", str prefix="", str locale="", loc src = |file:///dummy|)
   = agrammar(str name, list[Import] imports, list[ALevel] levels);
   
 
@@ -46,7 +46,7 @@ AGrammar implode(start[Module] pt) {
   g.src = pt@\loc.top;
   if (d:(Directive)`layout <Nonterminal x> = <Sym s>` <- pt.top.directives) {
     g.ws = "<x>";
-    g.levels[0].rules += [adefine("<x>", [aprod("<x>", [implode(s)])], src=d@\loc)];
+    g.levels[0].rules += [adefine("<x>", [aprod("", [implode(s)])], src=d@\loc)];
   }
   if ((Directive)`modifies <String base>` <- pt.top.directives) {
     g.base = "<base>"[1..-1];
@@ -54,6 +54,10 @@ AGrammar implode(start[Module] pt) {
   
   if ((Directive)`prefix <String prefix>` <- pt.top.directives) {
     g.prefix = "<prefix>"[1..-1];
+  }
+  
+  if ((Directive)`locale <Id locale>` <- pt.top.directives) {
+    g.locale = "<locale>";
   }
   
   return g;
@@ -207,6 +211,13 @@ str toLark(p:aprod(str l, list[ASymbol] ss)) {
   }
   
   return src;
+}
+
+str toLark(p:placeholder()) {
+  if (p.pos > 0) {
+    return "_<p.pos>";
+  }
+  return "_";
 }
 
 str toLark(nonterminal(str name)) = name;

@@ -35,23 +35,46 @@ void compile(start[Module] pt) = compile(implode(pt));
 @doc{Compile a gradual grammar to LARK files representing each level}
 void compile(AGrammar g) {
   
+  println("BASE: <g.base>");
+  
   if (g.base != "") {
     // assumes base grammar is in same directory.
+    str locale = g.locale;
     println("LOG: compiling grammar aspect with base <g.base>");
     AGrammar base = load(g.src[file=g.base]);
-    g = customize(base, g);
+    base = explode(base);
+    base = customize(base, g);
+    base.prefix += "-<locale>-"; // hack  
+    dumpFiles(base);
   }
+  else {
+	  println("LOG: compiling grammar <g.name> (<g.prefix>)");
+	  dumpFiles(explode(g));
+  }
+  
+}
 
-  println("LOG: compiling grammar <g.name>");
-  ASymbol ws = nonterminal(g.ws);
+void dumpFiles(AGrammar g) {
+  for (int i <- [0..size(g.levels)]) {
+    println("LOG: writing level <g.levels[i].n>");
+    writeFile(levelLoc(g.name, g.src, g.prefix, g.levels[i]), 
+    	toLark(g, g.levels[i]));
+  }
+}
+
+AGrammar explode(AGrammar g) {
   for (int i <- [0..size(g.levels)]) {
     // this could be more efficient if the previously *merged* level
     // acts as the base of the next level merge.
-    ALevel m = merge(g.levels[0..i+1]);
-    m = interleaveLayout(ws, normalize(m));
-    println("LOG: level <g.levels[i].n>");
-    writeFile(levelLoc(g.name, g.src, g.prefix, g.levels[i]), toLark(g, m));
+    
+    ALevel current = g.levels[i];
+    println("LOG: level <current.n>");
+    
+    g.levels[i] = merge(g.levels[0..i+1]);
+    g.levels[i].n = current.n;
   }
+  
+  return g;
 }
 
 
@@ -78,7 +101,7 @@ list[&T] interleave(&T elt, list[&T] lst)
   
 @doc{Interleave layout inbetween all sequences of symbols (requires normalize)}
 ALevel interleaveLayout(ASymbol sym, ALevel level) {
-  return level; // temporarily disabled.
+  return level;
   return visit (level) {
     case AProd p => p[symbols = interleave(sym, p.symbols)]
     case seq(list[ASymbol] ss) => seq(interleave(sym, ss))
@@ -174,46 +197,41 @@ weave(Prod p1, Prod p2) {
 */
 
 
+bool isGroupOfLiterals(seq(list[ASymbol] ss))
+  = ( true | it && isGroupOfLiterals(s) | ASymbol s <- ss );
+  
+bool isGroupOfLiterals(alt(ASymbol s1, ASymbol s2))
+  = isGroupOfLiterals(s1) && isGroupOfLiterals(s2);
+  
+bool isGroupOfLiterals(literal(_)) = true;
+
+default bool isGroupOfLiterals(ASymbol _) = false;
+
 @doc{Customize a base production with a production template}
 AProd weave(AProd base, AProd custom) {
   // a "map" from fysical pos in base, to placeholder pos in custom.
   lrel[int, int] reorder = [];
   
   list[ASymbol] weave(list[ASymbol] bs, list[ASymbol] cs) {
-    int lastArg = 0;
+  	if (size(bs) != size(cs)) {
+  	  println("WARNING: wrong arity of custom prod <toLark(custom)>; skipped.");
+  	  return bs;
+  	}
+  
     list[ASymbol] lst = [];
-    int i = 0;
-    outer: while (i < size(cs)) {
+    for (int i <- [0..size(cs)]) {
       ASymbol s = cs[i];
-      while (s is literal) {
-        lst += [s];
-        if (i < size(cs) - 1) {
-          i += 1;
-          s = cs[i];
-        }
-        else {
-          break outer;
-        }
-      }
+      
       if (s is placeholder) {
-        reorder += [<lastArg, s.pos>];
-        if (int i <- [lastArg..size(bs)], !(bs[i] is literal)) {
-          lst += [bs[i]];
-          lastArg = i + 1;
-        }
-        else {
-          println("WARNING: too many placeholders in custom production");
-        } 
+        reorder += [<i, s.pos - 1>];
+        lst += [bs[i]];
       }
-      else if (reg(seq(list[ASymbol] ss)) := s, reg(seq(list[ASymbol] bss)) := bs[lastArg]) {
-        lst += [reg(seq(weave(bss, ss)), sep=s.sep, opt=s.opt, many=s.many)];      
-      }
-      // todo: do the other nested symbols.
       else {
-        println("WARNING: unsupported symbol in customizing production");
+        lst += [s];
       }
-      i += 1;
+      
     }
+  
     return lst; 
   } 
 
@@ -228,31 +246,31 @@ AProd weave(AProd base, AProd custom) {
    // in the original production (let's say at index i)
    // and put it at index 0;
   
-   map[int, ASymbol] baseASTpos = ();
-   astPos = 1; // NB: one based!
-   for (ASymbol s <- base.symbols) {
-     if (!(s is literal)) {
-       baseASTpos[astPos] = s;
-       astPos += 1;
-     } 
-   }
-   
-   int i = 0;   
-   for (ASymbol s <- custom.symbols) {
-     if (s is placeholder, s.pos > 0) {
-       if (s.pos notin baseASTpos) {
-         println("WARNING: position <s.pos> placeholder could not be found in base production");
-       }
-       else {
-         result.symbols[i] = baseASTpos[s.pos];
-       }
-     }
-     i += 1;
-   }
-   
-  result.label = result.label +
-    intercalate("", [ "_<s.pos>" | ASymbol s <- custom.symbols
-                        , s is placeholder, s.pos > 0 ]);
+  // map[int, ASymbol] baseASTpos = ();
+  // astPos = 1; // NB: one based!
+  // for (ASymbol s <- base.symbols) {
+  //   if (!(s is literal)) {
+  //     baseASTpos[astPos] = s;
+  //     astPos += 1;
+  //   } 
+  // }
+  // 
+  // int i = 0;   
+  // for (ASymbol s <- custom.symbols) {
+  //   if (s is placeholder, s.pos > 0) {
+  //     if (s.pos notin baseASTpos) {
+  //       println("WARNING: position <s.pos> placeholder could not be found in base production");
+  //     }
+  //     else {
+  //       result.symbols[i] = baseASTpos[s.pos];
+  //     }
+  //   }
+  //   i += 1;
+  // }
+  // 
+  //result.label = result.label +
+  //  intercalate("", [ "_<s.pos>" | ASymbol s <- custom.symbols
+  //                      , s is placeholder, s.pos > 0 ]);
   
   return result;
   
@@ -260,31 +278,49 @@ AProd weave(AProd base, AProd custom) {
 
 @doc{Weave production "aspects" into a base grammar}
 AGrammar customize(AGrammar base, AGrammar aspect) {
-  for (ALevel l <- aspect.levels) {
-    if (int i <- [0..size(base.levels)], ALevel bl := base.levels[i], bl.n == l.n) {
-      for (ARule r <- l.rules) {
-       if (ARule theRule <- bl.rules, theRule.nt == r.nt) {
-         bl.rules = delete(bl.rules, indexOf(bl.rules, theRule));
-         for (AProd p <- r.prods) {
-		   if (int j <- [0..size(theRule.prods)], AProd p2 := theRule.prods[j], p2.label == p.label) {
-		     theRule.prods[j] = weave(p2, p);
-		   }
-		   else {
-		     println("WARNING: no production labeled <p.label> in base grammar");           
-           }
-         }
-         // it add back again.
-         bl.rules += [theRule];
-       }
-       else {
-         println("WARNING: no existing rule for <r.nt> in base grammar");
-       }
-     }
-     base.levels[i] = bl;
+  for (int i <- [0..size(base.levels)]) {
+    ALevel bl = base.levels[i];
+    println("LOG: weaving level: <bl.n>");
+    
+    set[str] done = {};
+    
+    
+    // walk down the aspect levels.
+      
+    for (int j <- [i+1..0]) { //ALevel l <- aspect.levels, l.n <= bl.n) {
+      
+      // todo: we should not apply a customization
+      // if a later level (say 12 ) has new production
+      // for the current considered nonterminal
+      // but no customization *at* that level (i.c. 12).
+      if (ALevel l <- aspect.levels, l.n == j) {
+        
+        // notin done ensures that later customizations
+        // take preference over earlier ones.
+        for (ARule r <- l.rules, r.nt notin done) {
+           done += {r.nt};
+           
+	       if (ARule theRule <- bl.rules, theRule.nt == r.nt) {
+	         bl.rules = delete(bl.rules, indexOf(bl.rules, theRule));
+	         int k = 0;
+	         while (k < size(r.prods), k < size(theRule.prods)) {
+	           theRule.prods[k] = weave(theRule.prods[k], r.prods[k]);
+	           k += 1;
+	         }
+	         if (k < size(r.prods)) {
+			     println("WARNING: no production at pos <k> in base grammar");           
+	         }
+	         // it add back again.
+	         bl.rules += [theRule];
+	       }
+	       else {
+	         println("WARNING: no existing rule for <r.nt> in base grammar");
+	       }
+	     }
+	   }
     }
-    else {
-      println("WARNING: no level <l.n> in base grammar."); 
-    }
+    
+    base.levels[i] = bl;
   }
   
   return base[name=aspect.name];

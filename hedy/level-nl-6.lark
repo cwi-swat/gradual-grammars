@@ -67,10 +67,6 @@ error_invalid: textwithoutspaces (_SPACE textwithspaces)?
 
 error_print_no_quotes: "print" _SPACE (textwithoutspaces | list_access | var) (_SPACE (textwithoutspaces | list_access | var))* -> error_print_nq
 
-ifelse: "if" _SPACE condition (_SPACE | _EOL*) command (_SPACE | _EOL*) "else" (_SPACE | _EOL*) command
-
-ifs: "if" _SPACE condition (_SPACE | _EOL*) command
-
 equality_check: textwithoutspaces _SPACE "is" _SPACE textwithoutspaces (_SPACE textwithoutspaces)*
 
 in_list_check: textwithoutspaces _SPACE "in" _SPACE var
@@ -99,10 +95,6 @@ command: print
   | assign_equals
   | assign_list_is
   | assign_list_equals
-
-ask_is: var _SPACE "is" _SPACE "ask" (_SPACE _print_argument)?
-
-ask_equals: var "=" "ask" (_SPACE _print_argument)?
 
 condition: in_list_check
   | equality_check_is
@@ -141,6 +133,14 @@ assign_equals: var "=" sum
 error_unsupported_number: /([-+]?(\d+[\.,]\d+))/ -> error_unsupported_number
 
 textwithoutspaces: /(?:[^\n, *+\-\/ei]|e(?!lse)|i(?!f))+/ -> text
+
+ask_is: var _SPACE "is" _SPACE "vraag" (_SPACE _print_argument)?
+
+ask_equals: var "=" "vraag" (_SPACE _print_argument)?
+
+ifelse: "als" _SPACE condition (_SPACE | _EOL*) command (_SPACE | _EOL*) "anders" (_SPACE | _EOL*) command
+
+ifs: "als" _SPACE condition (_SPACE | _EOL*) command
 
 random: ("willekeurig" | "random")
 

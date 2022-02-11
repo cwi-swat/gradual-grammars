@@ -65,17 +65,11 @@ assign: var _SPACE "is" _SPACE textwithspaces
 
 error_print_no_quotes: "print" _SPACE (textwithoutspaces | list_access | var) (_SPACE (textwithoutspaces | list_access | var))* -> error_print_nq
 
-ifelse: "if" _SPACE condition (_SPACE | _EOL*) command (_SPACE | _EOL*) "else" (_SPACE | _EOL*) command
-
 equality_check: textwithoutspaces _SPACE "is" _SPACE textwithoutspaces (_SPACE textwithoutspaces)*
 
 nospace: /[^\n, ]/
 
 _print_argument: (_SPACE | quoted_text | list_access | var_access | sum)*
-
-ask_is: var _SPACE "is" _SPACE "ask" (_SPACE _print_argument)?
-
-ask_equals: var "=" "ask" (_SPACE _print_argument)?
 
 list_access_var_is: var _SPACE "is" _SPACE var _SPACE "at" _SPACE (INT | random)
 
@@ -140,8 +134,6 @@ textwithspaces: /(?:[^\n,' ]| (?!else))+/ -> text
 
 text_in_quotes: "'" textwithspaces "'"
 
-ifs: "if" _SPACE (condition | andcondition | orcondition) _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
-
 andcondition: (condition) (_SPACE "and" _SPACE condition)*
 
 orcondition: (condition) (_SPACE "or" _SPACE condition)*
@@ -175,6 +167,14 @@ not_equal: comparison_arg _SPACE? "!=" _SPACE? comparison_arg
 ?comparison_arg: var
   | text_in_quotes
   | NUMBER
+
+ask_is: var _SPACE "is" _SPACE "vraag" (_SPACE _print_argument)?
+
+ask_equals: var "=" "vraag" (_SPACE _print_argument)?
+
+ifelse: "als" _SPACE condition (_SPACE | _EOL*) command (_SPACE | _EOL*) "anders" (_SPACE | _EOL*) command
+
+ifs: "if" _SPACE (condition | andcondition | orcondition) _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
 
 random: ("willekeurig" | "random")
 

@@ -67,8 +67,6 @@ error_invalid: textwithoutspaces (_SPACE textwithspaces)?
 
 error_print_no_quotes: "print" _SPACE (textwithoutspaces | list_access | var) (_SPACE (textwithoutspaces | list_access | var))* -> error_print_nq
 
-ifelse: "if" _SPACE condition (_SPACE | _EOL*) command (_SPACE | _EOL*) "else" (_SPACE | _EOL*) command
-
 equality_check: textwithoutspaces _SPACE "is" _SPACE textwithoutspaces (_SPACE textwithoutspaces)*
 
 in_list_check: textwithoutspaces _SPACE "in" _SPACE var
@@ -78,10 +76,6 @@ nospace: /[^\n, ]/
 textwithspaces: /(?:[^\n،, ]| (?!else))+/ -> text
 
 _print_argument: (_SPACE | quoted_text | list_access | var_access | sum)*
-
-ask_is: var _SPACE "is" _SPACE "ask" (_SPACE _print_argument)?
-
-ask_equals: var "=" "ask" (_SPACE _print_argument)?
 
 condition: in_list_check
   | equality_check_is
@@ -125,8 +119,6 @@ repeat: "repeat" _SPACE (INT | var) _SPACE "times" _EOL (_SPACE command) (_EOL _
 
 elses: _EOL (_SPACE)* "else" (_SPACE)* _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
 
-ifs: "if" _SPACE condition _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
-
 repeat_list: "for" _SPACE var _SPACE "in" _SPACE var _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
 
 command: print
@@ -148,6 +140,14 @@ command: print
   | for_loop
 
 for_loop: "for" _SPACE (NAME | var) _SPACE "in" _SPACE "range" _SPACE (INT | var) _SPACE "to" _SPACE (INT | var) _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+
+ask_is: var _SPACE "is" _SPACE "vraag" (_SPACE _print_argument)?
+
+ask_equals: var "=" "vraag" (_SPACE _print_argument)?
+
+ifelse: "als" _SPACE condition (_SPACE | _EOL*) command (_SPACE | _EOL*) "anders" (_SPACE | _EOL*) command
+
+ifs: "if" _SPACE condition _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
 
 random: ("willekeurig" | "random")
 

@@ -16,6 +16,7 @@ turtle
  
  
 
+
 level 2
 
 ask = _ _ "is" _ "vraag" _
@@ -35,5 +36,22 @@ remove = ("verwijder"|"remove") _ _ _ ("uit"|"from") _ _
 
   
 level 4
+
+level 5
+
+ifelse = "als" _ _ _ _ _ "anders" _ _
+
+ifs = "als" _ _ _ _
+
+level 6
+
+ask_is = _ _ "is" _ "vraag" _
+
+ask_equals = _ "=" "vraag" _
+
+
+
+level 16
+
 
     

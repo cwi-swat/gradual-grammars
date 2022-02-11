@@ -9,6 +9,7 @@ syntax Directive
   | "layout" Nonterminal "=" Sym
   | "modifies" String
   | "prefix" String
+  | "locale" Id
   ;
   
 

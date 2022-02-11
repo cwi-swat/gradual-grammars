@@ -63,17 +63,11 @@ assign: var _SPACE "is" _SPACE textwithspaces
 
 error_print_no_quotes: "print" _SPACE (textwithoutspaces | list_access | var) (_SPACE (textwithoutspaces | list_access | var))* -> error_print_nq
 
-ifelse: "if" _SPACE condition (_SPACE | _EOL*) command (_SPACE | _EOL*) "else" (_SPACE | _EOL*) command
-
 equality_check: textwithoutspaces _SPACE "is" _SPACE textwithoutspaces (_SPACE textwithoutspaces)*
 
 nospace: /[^\n, ]/
 
 _print_argument: (_SPACE | quoted_text | list_access | var_access | sum)*
-
-ask_is: var _SPACE "is" _SPACE "ask" (_SPACE _print_argument)?
-
-ask_equals: var "=" "ask" (_SPACE _print_argument)?
 
 list_access_var_is: var _SPACE "is" _SPACE var _SPACE "at" _SPACE (INT | random)
 
@@ -157,8 +151,6 @@ _COLON: _SPACE* ":" _SPACE*
 
 elses: _EOL _SPACE* "else" _COLON _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
 
-ifs: "if" _SPACE (condition | andcondition | orcondition) ":" _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
-
 elifs: _EOL _SPACE* "elif" _SPACE (condition | andcondition | orcondition) _COLON _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
 
 while_loop: "while" _SPACE (condition) _COLON _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
@@ -202,6 +194,14 @@ input_is: var _SPACE "is" _SPACE "input" _SPACE* ("(" ((quoted_text | list_acces
 input_equals: var _SPACE* "=" _SPACE* "input" _SPACE* ("(" ((quoted_text | list_access | var_access | sum) (_SPACE (quoted_text | list_access | var_access | sum))*) ")")?
 
 for_loop: "for" _SPACE (NAME | var) _SPACE "in" _SPACE "range" "(" (NUMBER | var) _COMMA (NUMBER | var) (_COMMA (NUMBER | var))? ")" _COLON _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
+
+ask_is: var _SPACE "is" _SPACE "vraag" (_SPACE _print_argument)?
+
+ask_equals: var "=" "vraag" (_SPACE _print_argument)?
+
+ifelse: "als" _SPACE condition (_SPACE | _EOL*) command (_SPACE | _EOL*) "anders" (_SPACE | _EOL*) command
+
+ifs: "if" _SPACE (condition | andcondition | orcondition) ":" _EOL (_SPACE command) (_EOL _SPACE command)* _EOL _END_BLOCK
 
 random: ("willekeurig" | "random")
 
