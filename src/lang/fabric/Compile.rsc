@@ -78,7 +78,7 @@ list[&T] interleave(&T elt, list[&T] lst)
   
 @doc{Interleave layout inbetween all sequences of symbols (requires normalize)}
 ALevel interleaveLayout(ASymbol sym, ALevel level) {
-  return level;
+  return level; // temporarily disabled.
   return visit (level) {
     case AProd p => p[symbols = interleave(sym, p.symbols)]
     case seq(list[ASymbol] ss) => seq(interleave(sym, ss))
@@ -101,17 +101,21 @@ ALevel merge(list[ALevel] levels) {
     }
   
      for (ARule r <- l.rules) {
-       ARule theRule = arule(r.nt, []);
-       if (ARule existing <- merged.rules, existing.nt == r.nt) {
+       ARule theRule = adefine(r.nt, []);
+       
+       if (r is amodify, ARule existing <- merged.rules, existing.nt == r.nt) {
          theRule = existing;
          // temporary removal
          merged.rules = delete(merged.rules, indexOf(merged.rules, existing));
        }
+       
        for (AProd p <- r.prods) {
+         
          if (p.label in l.deprecate) {
            println("LOG: deprecating <p.label>");
            p.deprecatedAt = l.n;
          }
+         
          if (p.override) {
            if (int i <- [0..size(theRule.prods)], AProd x := theRule.prods[i], x.label == p.label) {
              theRule.prods[i] = p;
@@ -120,10 +124,18 @@ ALevel merge(list[ALevel] levels) {
              println("WARNING: trying to override non-existing base production labeled <p.label>");
            }
          }
-         else {
-           theRule.prods += [p];
-         }
+         
+	     
+	     theRule.prods += [p];
+
        }
+       
+       if (r is amodify) {
+         theRule.prods = [ p2 | AProd p2 <- theRule.prods, AProd p0 <- r.removals, p2.symbols != p0.symbols ];
+         theRule.prods = [ p2 | AProd p2 <- theRule.prods, AProd p0 <- r.moveToEnd, p2.symbols != p0.symbols ];
+         theRule.prods += r.moveToEnd;
+       }
+       
        // add back again.
        if (theRule.prods != []) {
          merged.rules += [theRule];

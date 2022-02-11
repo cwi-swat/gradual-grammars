@@ -16,7 +16,8 @@ data ALevel(loc src = |file:///dummy|)
   = alevel(int n, list[str] remove, list[str] deprecate, list[ARule] rules);
   
 data ARule(loc src = |file:///dummy|)
-  = arule(str nt, list[AProd] prods)
+  = amodify(str nt, list[AProd] prods, list[AProd] removals = [], list[AProd] moveToEnd = [])
+  | adefine(str nt, list[AProd] prods)
   ;
   
 data AProd(bool error=false, bool override=false, int deprecatedAt = -1, str binding="", loc src = |file:///dummy|)
@@ -45,7 +46,7 @@ AGrammar implode(start[Module] pt) {
   g.src = pt@\loc.top;
   if (d:(Directive)`layout <Nonterminal x> = <Sym s>` <- pt.top.directives) {
     g.ws = "<x>";
-    g.levels[0].rules += [arule("<x>", [aprod("<x>", [implode(s)])], src=d@\loc)];
+    g.levels[0].rules += [adefine("<x>", [aprod("<x>", [implode(s)])], src=d@\loc)];
   }
   if ((Directive)`modifies <String base>` <- pt.top.directives) {
     g.base = "<base>"[1..-1];
@@ -111,7 +112,26 @@ ALevel implode((Level)`level <Nat n> <Rule* rs>`)
        src=n@\loc);
   
 ARule implode(r:(Rule)`<Nonterminal nt> = <{Prod "|"}+ ps>`)
-  = arule("<nt>", [ implode(p) | Prod p <- ps ], src=r@\loc);
+  = adefine("<nt>", [ implode(p) | Prod p <- ps ], src=r@\loc);
+
+ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps>`)
+  = amodify("<nt>", [ implode(p) | Prod p <- ps ], src=r@\loc);
+
+ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps> \> <{Prod "|"}+ ps2>`)
+  = amodify("<nt>", [ implode(p) | Prod p <- ps ], 
+      moveToEnd=[ implode(p) | Prod p <- ps2 ], src=r@\loc);
+
+ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps> -= <{Prod "|"}+ ps2>`)
+  = amodify("<nt>", [ implode(p) | Prod p <- ps ], 
+      removals=[ implode(p) | Prod p <- ps2 ], src=r@\loc);
+
+
+ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps> -= <{Prod "|"}+ ps2> \> <{Prod "|"}+ ps3>`)
+  = amodify("<nt>", [ implode(p) | Prod p <- ps ], 
+      removals=[ implode(p) | Prod p <- ps2 ], 
+      moveToEnd=[ implode(p) | Prod p <- ps3 ], src=r@\loc);
+
+
 
 AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss>`)
   = implodeProd(ms, "<l>", ss, "", p@\loc);
@@ -159,7 +179,9 @@ list[AProd] sortProductions(list[AProd] ps)
   + [ p | AProd p <- ps, p.deprecatedAt >= 0 ]
   + [ p | AProd p <- ps, p.error ];
 
-str toLark(arule(str nt, list[AProd] prods))
+
+// amodify is handled in compile.
+str toLark(adefine(str nt, list[AProd] prods))
   = "<nt>: <intercalate("\n  | ", [ toLark(p) | AProd p <- sortProductions(prods) ])>\n";
 
 

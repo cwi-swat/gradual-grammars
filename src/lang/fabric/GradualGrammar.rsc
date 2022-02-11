@@ -26,7 +26,15 @@ syntax Label = @category="Constant" Id;
 
 syntax Nonterminal = @category="Identifier" Id;
 
-syntax Rule = Nonterminal nt "=" {Prod "|"}+ prods;
+syntax Rule 
+  = modify: Nonterminal nt "+=" {Prod "|"}+ prods Removals? MoveToEnd?
+  | normal: Nonterminal nt "=" {Prod "|"}+ prods 
+  ;
+   
+syntax Removals = "-=" {Prod "|"}+ prods;
+
+syntax MoveToEnd = "\>" {Prod "|"}+ prods; 
+
 
 syntax Prod 
   = Modifier* Label label ":" Sym!alt* syms Binding?
