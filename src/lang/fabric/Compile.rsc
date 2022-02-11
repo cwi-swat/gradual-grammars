@@ -24,8 +24,8 @@ Problem: how to "fix" implode in case of reordered things.
 
 */
 
-loc levelLoc(str name, loc base, ALevel l)
-  = base[file="<name>-<l.n>.lark"];
+loc levelLoc(str name, loc base, str prefix, ALevel l)
+  = base[file="<prefix><l.n>.lark"];
 
 
 void compile(loc l) = compile(load(l));
@@ -50,7 +50,7 @@ void compile(AGrammar g) {
     ALevel m = merge(g.levels[0..i+1]);
     m = interleaveLayout(ws, normalize(m));
     println("LOG: level <g.levels[i].n>");
-    writeFile(levelLoc(g.name, g.src, g.levels[i]), toLark(g, m));
+    writeFile(levelLoc(g.name, g.src, g.prefix, g.levels[i]), toLark(g, m));
   }
 }
 

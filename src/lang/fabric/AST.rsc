@@ -6,7 +6,7 @@ import List;
 import ParseTree;
 import IO;
 
-data AGrammar(str ws = "", str base = "", loc src = |file:///dummy|)
+data AGrammar(str ws = "", str base = "", str prefix="", loc src = |file:///dummy|)
   = agrammar(str name, list[Import] imports, list[ALevel] levels);
   
 
@@ -50,6 +50,11 @@ AGrammar implode(start[Module] pt) {
   if ((Directive)`modifies <String base>` <- pt.top.directives) {
     g.base = "<base>"[1..-1];
   }
+  
+  if ((Directive)`prefix <String prefix>` <- pt.top.directives) {
+    g.prefix = "<prefix>"[1..-1];
+  }
+  
   return g;
 }
 
@@ -155,7 +160,7 @@ list[AProd] sortProductions(list[AProd] ps)
   + [ p | AProd p <- ps, p.error ];
 
 str toLark(arule(str nt, list[AProd] prods))
-  = "<nt>: <intercalate("\n\t| ", [ toLark(p) | AProd p <- sortProductions(prods) ])>\n";
+  = "<nt>: <intercalate("\n  | ", [ toLark(p) | AProd p <- sortProductions(prods) ])>\n";
 
 
 str toLark(p:aprod(str l, list[ASymbol] ss)) {

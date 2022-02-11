@@ -7,7 +7,10 @@ start syntax Module = "module" Id name Directive* directives Level* levels;
 syntax Directive 
   = "import" QName Binding?
   | "layout" Nonterminal "=" Sym
-  | "modifies" String;
+  | "modifies" String
+  | "prefix" String
+  ;
+  
 
 syntax QName = {Id "."}+;
 
