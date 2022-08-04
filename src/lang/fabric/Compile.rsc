@@ -63,6 +63,8 @@ void dumpFiles(AGrammar g) {
 }
 
 AGrammar explode(AGrammar g) {
+  AGrammar newG = g;
+  newG.levels = [];
   for (int i <- [0..size(g.levels)]) {
     // this could be more efficient if the previously *merged* level
     // acts as the base of the next level merge.
@@ -70,11 +72,11 @@ AGrammar explode(AGrammar g) {
     ALevel current = g.levels[i];
     println("LOG: level <current.n>");
     
-    g.levels[i] = merge(g.levels[0..i+1]);
-    g.levels[i].n = current.n;
+    newG.levels += [merge(g.levels[0..i+1])];
+    newG.levels[i].n = current.n;
   }
   
-  return g;
+  return newG;
 }
 
 
@@ -114,6 +116,8 @@ ALevel merge(list[ALevel] levels) {
   
   ALevel merged = levels[0];
   for (ALevel l <- levels[1..]) {
+    println("Merging level: <l.n>");
+
     merged = visit (merged) {
       // assumes labels are globally unique, not just per nt
       case ARule r: {
@@ -124,18 +128,22 @@ ALevel merge(list[ALevel] levels) {
     }
   
      for (ARule r <- l.rules) {
+       println("Considering rule: <r.nt>");
+
        ARule theRule = adefine(r.nt, []);
        
        if (ARule existing <- merged.rules, existing.nt == r.nt) {
-         if (r is amodify) { 
-            theRule = existing;
-         }
+         println("There was an existing rule for <r.nt>: <intercalate(", ", 
+            [ x.label | x <- existing.prods])>");
+
+         theRule = existing;
          merged.rules = delete(merged.rules, indexOf(merged.rules, existing));  
        }
        
        for (AProd p <- r.prods) {
-       
-         
+         println("Considering prod <p.label>");
+
+
          if (p.label in l.deprecate) {
            println("LOG: deprecating <p.label>");
            p.deprecatedAt = l.n;
@@ -143,21 +151,18 @@ ALevel merge(list[ALevel] levels) {
          
          if (p.override) {
            if (int i <- [0..size(theRule.prods)], AProd x := theRule.prods[i], x.label == p.label) {
+             println("Overriding: <p.label>");
              theRule.prods[i] = p;
            }
            else {
              println("WARNING: trying to override non-existing base production labeled <p.label>");
            }
          }
-         
-  	     theRule.prods += [p];
-       }
-       
-       if (r is amodify) {
-         theRule.prods -= [ p2 | AProd p2 <- theRule.prods, AProd p0 <- r.removals, p2.symbols == p0.symbols ];
-         theRule.prods -= [ p2 | AProd p2 <- theRule.prods, AProd p0 <- r.moveToEnd, p2.symbols == p0.symbols ];
-         theRule.prods += r.moveToEnd;
-       }
+         else {
+           println("Adding <p.label>");
+  	       theRule.prods += [p];
+         }
+      }
        
        // add back again.
        if (theRule.prods != []) {
@@ -296,7 +301,7 @@ AGrammar customize(AGrammar base, AGrammar aspect) {
       if (ALevel l <- aspect.levels, l.n == j) {
         
         // notin done ensures that later customizations
-        // take preference over earlier ones.
+        // take precedence over earlier ones.
         for (ARule r <- l.rules, r.nt notin done) {
            done += {r.nt};
            
