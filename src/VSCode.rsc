@@ -3,8 +3,8 @@ module VSCode
 
 import util::LanguageServer;
 import ParseTree;
-import GradualGrammar;
-import Compile;
+import lang::fabric::GradualGrammar;
+import lang::fabric::Compile;
 import util::Reflective;
 
 import IO;

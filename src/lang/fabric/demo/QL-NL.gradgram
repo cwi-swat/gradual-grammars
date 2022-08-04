@@ -9,7 +9,7 @@ level 1
 
 level 2
   bool = true: "waar" | false: "onwaar"
-  question = ifThen: "als" "(" _ ")" "dan" _ 
+  question = ifThen: "als"  _  "dan" ":" _ 
 
 level 3 // maybe not relevant (not show?)
   question

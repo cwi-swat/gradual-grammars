@@ -34,21 +34,16 @@ void compile(start[Module] pt) = compile(implode(pt));
 
 @doc{Compile a gradual grammar to LARK files representing each level}
 void compile(AGrammar g) {
-  
-  println("BASE: <g.base>");
-  
   if (g.base != "") {
     // assumes base grammar is in same directory.
     str locale = g.locale;
-    println("LOG: compiling grammar aspect with base <g.base>");
+    println("LOG: compiling fabric grammar with reference <g.base>");
     AGrammar base = load(g.src[file=g.base]);
-    //base = explode(base);
     base = stitchGrammar(base, g);
     base.prefix += "-<locale>-"; // hack  
     dumpFiles(explode(base));
   }
   else {
-	  println("LOG: compiling grammar <g.name> (<g.prefix>)");
 	  dumpFiles(explode(g));
   }
   
@@ -66,12 +61,8 @@ AGrammar explode(AGrammar g) {
   AGrammar newG = g;
   newG.levels = [];
   for (int i <- [0..size(g.levels)]) {
-    // this could be more efficient if the previously *merged* level
-    // acts as the base of the next level merge.
-    
     ALevel current = g.levels[i];
-    println("LOG: level <current.n>");
-    
+    println("LOG: level <current.n>");    
     newG.levels += [merge(g.levels[0..i+1])];
     newG.levels[i].n = current.n;
   }
@@ -104,10 +95,10 @@ list[&T] interleave(&T elt, list[&T] lst)
 @doc{Interleave layout inbetween all sequences of symbols (requires normalize)}
 ALevel interleaveLayout(ASymbol sym, ALevel level) {
   return level;
-  return visit (level) {
-    case AProd p => p[symbols = interleave(sym, p.symbols)]
-    case seq(list[ASymbol] ss) => seq(interleave(sym, ss))
-  }
+  // return visit (level) {
+  //   case AProd p => p[symbols = interleave(sym, p.symbols)]
+  //   case seq(list[ASymbol] ss) => seq(interleave(sym, ss))
+  // }
 }
 
 @doc{Merge levels into one, observing remove and override}
@@ -116,8 +107,7 @@ ALevel merge(list[ALevel] levels) {
   
   ALevel merged = levels[0];
   for (ALevel l <- levels[1..]) {
-    println("Merging level: <l.n>");
-
+    
     merged = visit (merged) {
       // assumes labels are globally unique, not just per nt
       case ARule r: {
@@ -128,22 +118,14 @@ ALevel merge(list[ALevel] levels) {
     }
   
      for (ARule r <- l.rules) {
-       println("Considering rule: <r.nt>");
-
        ARule theRule = adefine(r.nt, []);
        
        if (ARule existing <- merged.rules, existing.nt == r.nt) {
-         println("There was an existing rule for <r.nt>: <intercalate(", ", 
-            [ x.label | x <- existing.prods])>");
-
          theRule = existing;
          merged.rules = delete(merged.rules, indexOf(merged.rules, existing));  
        }
        
        for (AProd p <- r.prods) {
-         println("Considering prod <p.label>");
-
-
          if (p.label in l.deprecate) {
            println("LOG: deprecating <p.label>");
            p.deprecatedAt = l.n;
@@ -151,7 +133,6 @@ ALevel merge(list[ALevel] levels) {
          
          if (p.override) {
            if (int i <- [0..size(theRule.prods)], AProd x := theRule.prods[i], x.label == p.label) {
-             println("Overriding: <p.label>");
              theRule.prods[i] = p;
            }
            else {
@@ -159,7 +140,6 @@ ALevel merge(list[ALevel] levels) {
            }
          }
          else {
-           println("Adding <p.label>");
   	       theRule.prods += [p];
          }
       }
@@ -240,66 +220,6 @@ AProd stitchProds(AProd base, AProd fabric) {
   return base;
 }
 
-
-bool isGroupOfLiterals(seq(list[ASymbol] ss))
-  = ( true | it && isGroupOfLiterals(s) | ASymbol s <- ss );
-  
-bool isGroupOfLiterals(alt(ASymbol s1, ASymbol s2))
-  = isGroupOfLiterals(s1) && isGroupOfLiterals(s2);
-  
-bool isGroupOfLiterals(literal(_)) = true;
-
-default bool isGroupOfLiterals(ASymbol _) = false;
-
-@doc{Weave production "aspects" into a base grammar}
-AGrammar customize(AGrammar base, AGrammar aspect) {
-  for (int i <- [0..size(base.levels)]) {
-    ALevel bl = base.levels[i];
-    println("LOG: weaving level: <bl.n>");
-    
-    set[str] done = {};
-    
-    
-    // walk down the aspect levels.
-      
-    for (int j <- [i+1..0]) { //ALevel l <- aspect.levels, l.n <= bl.n) {
-      
-      // todo: we should not apply a customization
-      // if a later level (say 12 ) has new production
-      // for the current considered nonterminal
-      // but no customization *at* that level (i.c. 12).
-      if (ALevel l <- aspect.levels, l.n == j) {
-        
-        // notin done ensures that later customizations
-        // take precedence over earlier ones.
-        for (ARule r <- l.rules, r.nt notin done) {
-          done += {r.nt};
-           
-          if (ARule theRule <- bl.rules, theRule.nt == r.nt) {
-            bl.rules = delete(bl.rules, indexOf(bl.rules, theRule));
-            int k = 0;
-            while (k < size(r.prods), k < size(theRule.prods)) {
-              theRule.prods[k] = weave(theRule.prods[k], r.prods[k]);
-              k += 1;
-            }
-            if (k < size(r.prods)) {
-            println("WARNING: no production at pos <k> in base grammar");           
-            }
-            // it add back again.
-            bl.rules += [theRule];
-          }
-          else {
-            println("WARNING: no existing rule for <r.nt> in base grammar");
-          }
-	     }
-	   }
-    }
-    
-    base.levels[i] = bl;
-  }
-  
-  return base[name=aspect.name];
-}
 
 
 
