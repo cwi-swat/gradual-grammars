@@ -42,10 +42,10 @@ void compile(AGrammar g) {
     str locale = g.locale;
     println("LOG: compiling grammar aspect with base <g.base>");
     AGrammar base = load(g.src[file=g.base]);
-    base = explode(base);
-    base = customize(base, g);
+    //base = explode(base);
+    base = stitchGrammar(base, g);
     base.prefix += "-<locale>-"; // hack  
-    dumpFiles(base);
+    dumpFiles(explode(base));
   }
   else {
 	  println("LOG: compiling grammar <g.name> (<g.prefix>)");
@@ -173,33 +173,72 @@ ALevel merge(list[ALevel] levels) {
   return merged;
 }
 
-/*
+AGrammar stitchGrammar(AGrammar base, AGrammar fabric) {
+  for (int i <- [0..size(base.levels)]) {
+    ALevel baseLevel = base.levels[i];
 
-Pseudo code
+    if (ALevel fabricLevel <- fabric.levels, fabricLevel.n == baseLevel.n) {
+      // we have customizations.
 
-(assume all placeholders have 1-based suffixes
+      for (int j <- [0..size(baseLevel.rules)]) {
+        ARule baseRule = baseLevel.rules[j];
+        
+        if (ARule fabricRule <- fabricLevel.rules, fabricRule.nt == baseRule.nt) {
 
-symbols1 
-symbols2
+          for (int k <- [0..size(baseRule.prods)]) {
+            AProd baseProd = baseRule.prods[k];
 
+            if (AProd fabricProd <- fabricRule.prods, fabricProd.label == baseProd.label) {
+              baseRule.prods[k] = stitchProds(baseProd, fabricProd);
+            }
+          }
+        }
+        
+        baseLevel.rules[j] = baseRule;
+      }
+    }
 
-weave(Prod p1, Prod p2) {
-  assert p1.label == p2.label;
+    base.levels[i] = baseLevel;
+  }
+
+  return base;
+}
+
+AProd stitchProds(AProd base, AProd fabric) {
+  assert fabric.label == base.label;
   
-  list[Symbol] astKids = [ s | Symbol s <- p1.symbols, !(s is literal) ];
+  int astPos = 1;
+
+  ASymbol lookupAST(int pos) {
+    int cur = 1;
+    for (/ASymbol s <- base.symbols, !(s is literal)) {
+      if (cur == pos) {
+        return s;
+      }
+      cur += 1;
+    }
+    throw "error: ast pos <pos> out of bounds for <base>";
+  }
   
-  Symbol lookup(Symbol s) {
-    if (s is placeholder) 
-      return astKids[s.pos - 1];
+  ASymbol lookup(ASymbol s) {
+    if (s is placeholder) {
+      if (s.pos > 0) {
+        return lookupAST(s.pos);
+      }
+      ASymbol a = lookupAST(astPos);
+      astPos += 1;
+      return a;
+    }
     return s;
   }
 
-  p2.symbols = [ lookup(s) | Symbol s <- p2.symbols ];
-  return p2;
+  // we modify base to preserve metadata.
+  base.symbols = visit (fabric.symbols) {
+     case ASymbol s => lookup(s) 
+  }
+
+  return base;
 }
-
-
-*/
 
 
 bool isGroupOfLiterals(seq(list[ASymbol] ss))
@@ -211,75 +250,6 @@ bool isGroupOfLiterals(alt(ASymbol s1, ASymbol s2))
 bool isGroupOfLiterals(literal(_)) = true;
 
 default bool isGroupOfLiterals(ASymbol _) = false;
-
-@doc{Customize a base production with a production template}
-AProd weave(AProd base, AProd custom) {
-  // a "map" from fysical pos in base, to placeholder pos in custom.
-  lrel[int, int] reorder = [];
-  
-  list[ASymbol] weave(list[ASymbol] bs, list[ASymbol] cs) {
-  	if (size(bs) != size(cs)) {
-  	  println("WARNING: wrong arity of custom prod <toLark(custom)>; skipped.");
-  	  return bs;
-  	}
-  
-    list[ASymbol] lst = [];
-    for (int i <- [0..size(cs)]) {
-      ASymbol s = cs[i];
-      
-      if (s is placeholder) {
-        reorder += [<i, s.pos - 1>];
-        lst += [bs[i]];
-      }
-      else {
-        lst += [s];
-      }
-      
-    }
-  
-    return lst; 
-  } 
-
-  // NB: weave has side-effects in reorder map.
-  AProd result = aprod(base.label, weave(base.symbols, custom.symbols), 
-    error=base.error, override=base.override, binding=base.binding);
-  
-   // TODO: check that no pos is out of bounds and all pos are used and unique
-
-   // let's say there's a placeholder _2 at index 0
-   // this means that i have to find the second AST arg
-   // in the original production (let's say at index i)
-   // and put it at index 0;
-  
-  // map[int, ASymbol] baseASTpos = ();
-  // astPos = 1; // NB: one based!
-  // for (ASymbol s <- base.symbols) {
-  //   if (!(s is literal)) {
-  //     baseASTpos[astPos] = s;
-  //     astPos += 1;
-  //   } 
-  // }
-  // 
-  // int i = 0;   
-  // for (ASymbol s <- custom.symbols) {
-  //   if (s is placeholder, s.pos > 0) {
-  //     if (s.pos notin baseASTpos) {
-  //       println("WARNING: position <s.pos> placeholder could not be found in base production");
-  //     }
-  //     else {
-  //       result.symbols[i] = baseASTpos[s.pos];
-  //     }
-  //   }
-  //   i += 1;
-  // }
-  // 
-  //result.label = result.label +
-  //  intercalate("", [ "_<s.pos>" | ASymbol s <- custom.symbols
-  //                      , s is placeholder, s.pos > 0 ]);
-  
-  return result;
-  
-}
 
 @doc{Weave production "aspects" into a base grammar}
 AGrammar customize(AGrammar base, AGrammar aspect) {
@@ -303,24 +273,24 @@ AGrammar customize(AGrammar base, AGrammar aspect) {
         // notin done ensures that later customizations
         // take precedence over earlier ones.
         for (ARule r <- l.rules, r.nt notin done) {
-           done += {r.nt};
+          done += {r.nt};
            
-	       if (ARule theRule <- bl.rules, theRule.nt == r.nt) {
-	         bl.rules = delete(bl.rules, indexOf(bl.rules, theRule));
-	         int k = 0;
-	         while (k < size(r.prods), k < size(theRule.prods)) {
-	           theRule.prods[k] = weave(theRule.prods[k], r.prods[k]);
-	           k += 1;
-	         }
-	         if (k < size(r.prods)) {
-			     println("WARNING: no production at pos <k> in base grammar");           
-	         }
-	         // it add back again.
-	         bl.rules += [theRule];
-	       }
-	       else {
-	         println("WARNING: no existing rule for <r.nt> in base grammar");
-	       }
+          if (ARule theRule <- bl.rules, theRule.nt == r.nt) {
+            bl.rules = delete(bl.rules, indexOf(bl.rules, theRule));
+            int k = 0;
+            while (k < size(r.prods), k < size(theRule.prods)) {
+              theRule.prods[k] = weave(theRule.prods[k], r.prods[k]);
+              k += 1;
+            }
+            if (k < size(r.prods)) {
+            println("WARNING: no production at pos <k> in base grammar");           
+            }
+            // it add back again.
+            bl.rules += [theRule];
+          }
+          else {
+            println("WARNING: no existing rule for <r.nt> in base grammar");
+          }
 	     }
 	   }
     }

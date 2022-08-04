@@ -1,41 +1,34 @@
 module QL
 
+prefix "QL"
+
 level 1
+    STRING = string: /"[^"]*"/
+    ID = id: /[a-zA-Z][a-zA-Z0-9]*/
+    form = form: "form" ID question*
+    question = question: "ask" STRING "into" ID  ":" type 
+    type = bool: "boolean" 
 
-STRING = string: /"[^"]*"/
-ID = id: /[a-zA-Z][a-zA-Z0-9]*/
+level 2 
+    bool = true: "true" | false: "false"
+    question = ifThen: "if" "(" or_expr ")" question
+    or_expr = or: and_expr "||" or_expr | and: and_expr
+    and_expr = and: primary "&&" and_expr | prim: primary 
+    primary = ref: ID | boolean: bool
 
-form = form: "form" ID question*
-question = question: "ask" STRING "into" ID  ":" type 
-type = bool: "boolean" 
+level 3 
+    question 
+        = @override ifThen: "if" "(" expr ")" "{" question* "}"
+        | @error ifThenError: "if" "(" expr ")" question
 
-level 2 // point: show extension with bool exprs 
-
-bool = true: "true" | false: "false"
-
-question = ifThen: "if" "(" or_expr ")" question
-
-or_expr = or: and_expr "||" or_expr | and: and_expr
-and_expr = and: primary "&&" and_expr | prim: primary 
-primary = ref: ID | boolean: bool
-
-level 3 // require grouping; point: override and error
-
-question 
-    = @override ifThen: "if" "(" expr ")" "{" question* "}"
-    | @error ifThenError: "if" "(" expr ")" question
-
-level 4 // more expressions (don't show)
-
-type = string: "string" | int: "integer"
-
-INT = int: /[0-9]+/
-
-and_expr = @override and: comp_expr "&&" and_expr | comp: comp_expr 
-comp_expr = lt: add_expr "<" add_expr | add: add_expr
-add_expr = plus: mul_expr "+" add_expr | mul: mul_expr
-mul_expr = mul: primary "*" mul_expr | prim: primary 
-primary = int: INT | str: STRING
+level 4 
+    type = string: "string" | int: "integer"
+    INT = int: /[0-9]+/
+    and_expr = @override and: comp_expr "&&" and_expr | comp: comp_expr 
+    comp_expr = lt: add_expr "<" add_expr | add: add_expr
+    add_expr = plus: mul_expr "+" add_expr | mul: mul_expr
+    mul_expr = mul: primary "*" mul_expr | prim: primary 
+    primary = int: INT | str: STRING
 
 
 

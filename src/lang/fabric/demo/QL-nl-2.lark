@@ -1,0 +1,22 @@
+STRING: /"[^"]*"/ -> string
+
+ID: /[a-zA-Z][a-zA-Z0-9]*/ -> id
+
+form: "formulier" ID question -> form
+
+type: "waarheidswaarde" -> bool
+
+bool: "waar" -> true
+  | "onwaar" -> false
+
+question: "vraag" ID "met" STRING ":" type -> question
+  | "als" "(" or_expr ")" "dan" question -> ifThen
+
+or_expr: and_expr "||" or_expr -> or
+  | and_expr -> and
+
+and_expr: primary "&&" and_expr -> and
+  | primary -> prim
+
+primary: ID -> ref
+  | bool -> boolean

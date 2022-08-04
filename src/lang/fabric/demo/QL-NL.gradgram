@@ -1,25 +1,22 @@
-module QlNL
+module QlNL modifies "QL.gradgram"
 
-modifies "QL.gradgram"
+locale nl
 
-level 1 // point: translation, placeholders, reordering
+level 1 
+  form = form: "formulier" _ _
+  type = bool: "waarheidswaarde"
+  question = question: "vraag" _2 "met" _1 ":" _3
 
-form = form: "formulier" _ _
-type = bool: "waarheidswaarde"
-question = question: "vraag" _2 "met" _1 ":" _3
-
-level 2 // point: adding keywords "dan"
-
-bool = true: "waar" | false: "onwaar"
-question = ifThen: "als" "(" _ ")" "dan" _ 
+level 2
+  bool = true: "waar" | false: "onwaar"
+  question = ifThen: "als" "(" _ ")" "dan" _ 
 
 level 3 // maybe not relevant (not show?)
-
-question
+  question
     = ifThen: "als" "(" _ ")" "dan" "{" _ "}"
     | ifThenError: "als" "(" _ ")" _
 
-level 4 // point: the rest stays the same
+level 4 
+  type = string: "tekst" | int: "getal"
 
-type = string: "tekst" | int: "getal"
 
