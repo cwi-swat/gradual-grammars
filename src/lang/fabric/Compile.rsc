@@ -133,14 +133,15 @@ ALevel merge(list[ALevel] levels) {
          
          if (p.override) {
            if (int i <- [0..size(theRule.prods)], AProd x := theRule.prods[i], x.label == p.label) {
-             theRule.prods[i] = p;
+             theRule.prods[i] = p[level=l.n];
            }
            else {
              println("WARNING: trying to override non-existing base production labeled <p.label>");
+             println("\tlocation <p.src>");
            }
          }
          else {
-  	       theRule.prods += [p];
+  	       theRule.prods += [p[level=l.n]];
          }
       }
        

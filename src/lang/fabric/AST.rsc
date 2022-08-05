@@ -20,7 +20,7 @@ data ARule(loc src = |file:///dummy|)
   | adefine(str nt, list[AProd] prods)
   ;
   
-data AProd(bool error=false, bool override=false, int deprecatedAt = -1, str binding="", loc src = |file:///dummy|)
+data AProd(bool error=false, bool override=false, int deprecatedAt = -1, str binding="", int level=-1, loc src = |file:///dummy|)
   = aprod(str label, list[ASymbol] symbols);
   
 data ASymbol
@@ -107,64 +107,64 @@ default ASymbol implode(Sym s) {
   
 ALevel implode(t:(Level)`level <Nat n> remove <{Label ","}+ ls> <Rule* rs>`)
   = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ], [], 
-       [ implode(r) | Rule r <- rs ], src=n@\loc);
+       [ implode(r, toInt("<n>")) | Rule r <- rs ], src=n@\loc);
 
 ALevel implode(t:(Level)`level <Nat n> remove <{Label ","}+ ls> deprecate <{Label ","}+ ds> <Rule* rs>`)
   = alevel(toInt("<n>"), [ "<l>" | Label l <- ls ], [ "<l>" | Label l <- ds ], 
-       [ implode(r) | Rule r <- rs ], src=n@\loc);
+       [ implode(r, toInt("<n>")) | Rule r <- rs ], src=n@\loc);
 
 ALevel implode(t:(Level)`level <Nat n> deprecate <{Label ","}+ ds> <Rule* rs>`)
   = alevel(toInt("<n>"), [], [ "<l>" | Label l <- ds ], 
-       [ implode(r) | Rule r <- rs ], src=n@\loc);
+       [ implode(r, toInt("<n>")) | Rule r <- rs ], src=n@\loc);
 
 ALevel implode((Level)`level <Nat n> <Rule* rs>`)
-  = alevel(toInt("<n>"), [], [], [ implode(r) | Rule r <- rs ],
+  = alevel(toInt("<n>"), [], [], [ implode(r, toInt("<n>")) | Rule r <- rs ],
        src=n@\loc);
   
-ARule implode(r:(Rule)`<Nonterminal nt> = <{Prod "|"}+ ps>`)
-  = adefine("<nt>", [ implode(p) | Prod p <- ps ], src=r@\loc);
+ARule implode(r:(Rule)`<Nonterminal nt> = <{Prod "|"}+ ps>`, int l)
+  = adefine("<nt>", [ implode(p, l) | Prod p <- ps ], src=r@\loc);
 
-ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps>`)
-  = amodify("<nt>", [ implode(p) | Prod p <- ps ], src=r@\loc);
+ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps>`, int l)
+  = amodify("<nt>", [ implode(p, l) | Prod p <- ps ], src=r@\loc);
 
-ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps> \> <{Prod "|"}+ ps2>`)
-  = amodify("<nt>", [ implode(p) | Prod p <- ps ], 
-      moveToEnd=[ implode(p) | Prod p <- ps2 ], src=r@\loc);
+ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps> \> <{Prod "|"}+ ps2>`, int l)
+  = amodify("<nt>", [ implode(p, l) | Prod p <- ps ], 
+      moveToEnd=[ implode(p, l) | Prod p <- ps2 ], src=r@\loc);
 
-ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps> -= <{Prod "|"}+ ps2>`)
-  = amodify("<nt>", [ implode(p) | Prod p <- ps ], 
-      removals=[ implode(p) | Prod p <- ps2 ], src=r@\loc);
-
-
-ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps> -= <{Prod "|"}+ ps2> \> <{Prod "|"}+ ps3>`)
-  = amodify("<nt>", [ implode(p) | Prod p <- ps ], 
-      removals=[ implode(p) | Prod p <- ps2 ], 
-      moveToEnd=[ implode(p) | Prod p <- ps3 ], src=r@\loc);
+ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps> -= <{Prod "|"}+ ps2>`, int l)
+  = amodify("<nt>", [ implode(p, l) | Prod p <- ps ], 
+      removals=[ implode(p, l) | Prod p <- ps2 ], src=r@\loc);
 
 
+ARule implode(r:(Rule)`<Nonterminal nt> += <{Prod "|"}+ ps> -= <{Prod "|"}+ ps2> \> <{Prod "|"}+ ps3>`, int l)
+  = amodify("<nt>", [ implode(p, l) | Prod p <- ps ], 
+      removals=[ implode(p, l) | Prod p <- ps2 ], 
+      moveToEnd=[ implode(p, l) | Prod p <- ps3 ], src=r@\loc);
 
-AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss>`)
-  = implodeProd(ms, "<l>", ss, "", p@\loc);
+
+
+AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss>`, int level)
+  = implodeProd(ms, "<l>", ss, "", p@\loc, level);
   
-AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss> -\> <Label b>`)
-  = implodeProd(ms, "<l>", ss, "<b>", p@\loc);
+AProd implode(p:(Prod)`<Modifier* ms> <Label l>: <Sym* ss> -\> <Label b>`, int level)
+  = implodeProd(ms, "<l>", ss, "<b>", p@\loc, level);
 
 
-AProd implode(p:(Prod)`<Modifier* ms> <Sym* ss> -\> <Label b>`)
-  = implodeProd(ms, "", ss, "<b>", p@\loc);
+AProd implode(p:(Prod)`<Modifier* ms> <Sym* ss> -\> <Label b>`, int level)
+  = implodeProd(ms, "", ss, "<b>", p@\loc, level);
 
-AProd implode(p:(Prod)`<Modifier* ms> <Sym* ss>`)
-  = implodeProd(ms, "", ss, "", p@\loc);
+AProd implode(p:(Prod)`<Modifier* ms> <Sym* ss>`, int level)
+  = implodeProd(ms, "", ss, "", p@\loc, level);
   
-AProd implodeProd(Modifier* ms, str l, Sym* ss, str binding, loc src) {
-  AProd p = aprod(l, [ implode(s) | Sym s <- ss ] , binding=binding);
+AProd implodeProd(Modifier* ms, str l, Sym* ss, str binding, loc src, int level) {
+  AProd p = aprod(l, [ implode(s) | Sym s <- ss ] , binding=binding, level=level, src=src);
   if ((Modifier)`@override` <- ms) {
     p.override = true;
   }
   if ((Modifier)`@error` <- ms) {
     p.error = true;
   }
-  return p[src=src];
+  return p;
 }
 
 
