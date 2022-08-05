@@ -1,0 +1,153 @@
+module Hedy
+
+import common.NUMBER -> NUMBER
+import common.SIGNED_INT -> INT
+
+prefix "Hedy"
+
+layout WS = _SPACE?
+
+level 1
+
+_SPACE =  " "+
+_SINGLE_QUOTE = "'" | "‘" | "’"
+_COMMA = "," | "،" 
+_EOL = "\r"?"\n"
+
+start = program
+program = _EOL* (command _EOL+)* command?
+
+command 
+  = print: "print" text?
+  | ask: "ask" text?
+  | echo: "echo" text? 
+  | forward: "forward" (text | NUMBER)? 
+  | turn: "turn" text? 
+  | @error error_invalid_space: text?
+  | @error error_invalid: textwithoutspaces text?
+
+comment = "#" /([^\n]+)/
+
+_EOL = "\r"?"\n"
+
+text = text: /([^\n]+)/  //anything can be parsed except for a newline
+textwithoutspaces = text: /([^\n *+-\/]+)/  //anything can be parsed except for spaces (plus: a newline)
+
+// FH Sept 2021: More info on this variable format: https://www.unicode.org/reports/tr31/tr31-1.html
+// Exact grammar stolen from: https://lark-parser.readthedocs.io/en/latest/classes.html
+
+NAME = ID_START ID_CONTINUE*
+ID_START = /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/
+ID_CONTINUE = ID_START | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/
+
+// Internal symbol added by the preprocess_blocks function to indicate the end of blocks
+_END_BLOCK = "end-block"
+
+level 2
+
+remove echo
+
+command
+  = assign: NAME "is" text 
+  | sleep: sleep (INT | NAME)?
+  | @error error_invalid
+  | @override print: "print" (textwithoutspaces | punctuation)*
+  | @override ask: NAME "is" "ask" (text | punctuation)*
+  | @override forward: "forward" (NUMBER | textwithoutspaces)?
+  | @override turn: "turn" (NUMBER | textwithoutspaces)?
+  | color: "color" (color | textwithoutspaces)?
+  | @error error_ask_dep_2: "ask" text? 
+  | @error error_echo_dep_2: "echo" text? 
+
+color = "black" | "blue" | "brown" | "gray" | "green" | "orange" | "pink" | "purple" | "red" | "white" | "yellow"
+
+level 3
+
+command
+  = add: "add" some_spaces "to" NAME
+  | remove: "remove" some_spaces "form" NAME
+  | @override ask: NAME "is" "ask" (text_ask | punctuation)*
+  | @override assign: NAME "is" (list_access | text) 
+  | @override forward: "forward" (NUMBER | list_access | textwithoutspaces)?
+  | @override turn: "turn" (NUMBER | list_access | textwithoutspaces)?
+  | @override color: "color" (color | list_access | textwithoutspaces)?
+  | @override sleep: "sleep" (INT | list_access | var_access)?
+  | assign_list: NAME "is" {text_list ","}+ 
+  | @error error_invalid
+
+list_access = NAME "at" (INT | "random") 
+
+// lists are introduced and list separators (comma and arabic comma) have to excluded from text.
+text = @override text: /([^\n!?.،,，]+)/ 
+
+text_ask = text: /([^\n!?.]+)/  // the ask command is an exception since it needs to include commas in its value
+
+text_list = text: /([^\n,،，]+)/  // list elements are another exception since they can contain punctuation but not list separators
+
+// FH, jan 22: not exactly sure why this works, while textwithoutspaces parses the whole line in add/remove
+// leaving this for now
+some_spaces = text: /([^\r\n!?. ]+)/ (_SPACE /([^\r\n!?. ]+)/)* 
+
+level 4
+
+// redefining it entirely since it has many order-depending rules (e.g ask_no_quotes should be after ask and before assign)
+command
+  = @override print: "print" _print_argument?
+  | @override ask: NAME "is" "ask" _print_argument?
+  | @error error_ask_no_quotes: "NAME" "is" "ask" text
+  | @error error_invalid_space 
+  | @error error_print_no_quotes: "print" text
+  | @error error_invalid
+
+
+_print_argument = arg: (list_access | quoted_text | NAME)*
+
+// literal strings must be single-quoted in ask and print commands so punctuation should not be treated differently anymore
+// anything can be parsed except for a newline, a space and a list separator
+textwithoutspaces = @override text: /([^\n،,， ]+)/ 
+text = @override text: /([^\n،,，]+)/ 
+
+ //text can be between single or double quotes, but quotes may be escaped with \
+quoted_text = text: (/'((?:[^\\']|\\.)*)'/ | /"((?:[^\\"]|\\.)*)"/) 
+
+level 5
+
+remove error_invalid, error_ask_no_quotes
+
+//TODO
+// program: _empty_program | _non_empty_program
+// _empty_program: (_EOL | _SPACE)*
+// _non_empty_program: _EOL* (command | error_invalid) _SPACE* (_EOL+ command _SPACE*)* _EOL* //lines may end on spaces and might be separated by many newlines
+
+
+program = @override program: _EOL* (command_with_ifs _EOL+)* command_with_ifs?
+
+command_with_ifs 
+  = command_no_ifs: command
+  | ifelse: "if" condition command
+  | ifs: "if" condition command  "else" command
+  | list_access_var: NAME "is" NAME "at" (INT | random)
+
+command 
+  = @override assign_list: NAME "is" {textwithspaces ","}+ 
+  | @override assign:  NAME "is" textwithspaces
+  | @override @error error_print_no_quotes: "print" (textwithoutspaces | list_access | NAME)* 
+  | @error @override error_invalid: textwithoutspaces (quoted_text | textwithspaces)? 
+  | @error @override error_print_quotes: "print" (textwithoutspaces | list_access | NAME)* 
+
+
+condition 
+  = equality_check: (textwithoutspaces | INT) "is" (quoted_text | textwithoutspaces | INT) 
+  | in_list_check: textwithoutspaces "in" var_access
+  | condition_spaces: textwithoutspaces "is" textwithoutspaces (_SPACE textwithoutspaces)+
+
+textwithspaces 
+  = @override text: /(?:[^#\n،,， ]| (?!else|başka|अन्यथा|否则|senão|ellers|alie|altrimenti|anders|inaczej|sinon|sino|אחרת|وإلا))+/ 
+
+textwithoutspaces 
+  = @override text: /(?:[^#\n،,， *+\-\/eiasbअ否אو]|א(?!חרת )|و(?!إلا )|否(?!则 )|अ(?!न्यथा )|b(?!aşka )|e(?!lse |llers )|s(?!inon |enão |ino )|i(?!naczej )|a(?!nders |lie |ltrimenti ))+/  
+
+
+
+
+
