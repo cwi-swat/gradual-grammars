@@ -61,7 +61,7 @@ condition: (textwithoutspaces | INT) ("is" | "=") (textwithoutspaces | quoted_te
 command_with_ifs: command -> command_no_ifs
   | "als" condition "dan" command -> ifs
   | "als" condition "dan" command " anders" command -> ifelse
-  | NAME "is" ("is" | "=") "op" NAME -> list_access_var
+  | NAME "is" NAME "op" (INT | random) -> list_access_var
 
 expression: simple_expression -> simple_expression
   | expression "*" atom -> multiplication
@@ -81,7 +81,7 @@ atom: INT -> int
   | /([-+]?(\d+[\.،,，]\d+))/ -> error_unsupported_number // error production
 
 command: "print" _print_argument? "uit" -> print
-  | NAME "is" "vraag" ("is" | "=") -> ask
+  | NAME "is" "vraag" _print_argument? -> ask
   | "vooruit" (NUMBER | list_access | textwithoutspaces)? -> forward
   | "draai" (NUMBER | list_access | textwithoutspaces)? -> turn
   | NAME ("is" | "=") (expression | textwithoutspaces | textwithspaces) -> assign

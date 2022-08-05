@@ -191,6 +191,17 @@ AGrammar stitchGrammar(AGrammar base, AGrammar fabric) {
   return base;
 }
 
+
+bool isGroupOfLiterals(seq(list[ASymbol] ss))
+  = ( true | it && isGroupOfLiterals(s) | ASymbol s <- ss );
+  
+bool isGroupOfLiterals(alt(ASymbol s1, ASymbol s2))
+  = isGroupOfLiterals(s1) && isGroupOfLiterals(s2);
+  
+bool isGroupOfLiterals(literal(_)) = true;
+
+default bool isGroupOfLiterals(ASymbol _) = false;
+
 AProd stitchProds(AProd base, AProd fabric) {
   assert fabric.label == base.label;
   
@@ -214,7 +225,7 @@ AProd stitchProds(AProd base, AProd fabric) {
     // }
 
     for (ASymbol s <- base.symbols) {
-      if (!(s is literal)) {
+      if (!(s is literal) && !isGroupOfLiterals(s)) {
         if (cur == pos) {
           return s;
         }
