@@ -55,7 +55,7 @@ print_expression: INT -> print_expression
   | /([-+]?(\d+[\.،,，]\d+))/ -> error_unsupported_number // error production
 
 command_with_ifs: command -> command_no_ifs
-  | NAME "is" ("is" | "=") "op" "is" | "=" -> list_access_var
+  | NAME "is" ("is" | "=") "op" NAME -> list_access_var
 
 expression: simple_expression -> simple_expression
   | expression "*" atom -> multiplication
@@ -84,9 +84,9 @@ command: "print" _print_argument? "uit" -> print
   | "voeg" some_spaces "aan" NAME "toe" -> add
   | "verwijder" some_spaces "uit" NAME -> remove
   | NAME ("is" | "=") textwithspaces+ -> assign_list
-  | "herhaal" (INT | NAME) "keer" INT | NAME "\n" INT -> repeat
-  | "als" condition "dan" "\n" command+ "\n" command -> ifs
-  | "als" condition "dan" "\n" command+ "\n" command "\n" "anders" "\n" _END_BLOCK "\n" command+ -> ifelse
+  | "herhaal" (INT | NAME) "keer" command+ "\n" _END_BLOCK -> repeat
+  | "als" condition "dan" "\n" command+ "\n" _END_BLOCK -> ifs
+  | "als" condition "dan" "\n" command+ "\n" _END_BLOCK "\n" "anders" "\n" command+ "\n" _END_BLOCK -> ifelse
   | text? -> error_invalid_space // error production
   | error_invalid // error production
   | "vraag" text? -> error_ask_dep_2 // error production

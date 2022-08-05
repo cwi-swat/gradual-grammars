@@ -61,7 +61,7 @@ condition: (textwithoutspaces | INT) ("is" | "=") (textwithoutspaces | quoted_te
 command_with_ifs: command -> command_no_ifs
   | "als" condition "dan" command -> ifs
   | "als" condition "dan" command " anders" command -> ifelse
-  | NAME "is" ("is" | "=") "op" "is" | "=" -> list_access_var
+  | NAME "is" ("is" | "=") "op" NAME -> list_access_var
 
 expression: simple_expression -> simple_expression
   | expression "*" atom -> multiplication
@@ -90,7 +90,7 @@ command: "print" _print_argument? "uit" -> print
   | "voeg" some_spaces "aan" NAME "toe" -> add
   | "verwijder" some_spaces "uit" NAME -> remove
   | NAME ("is" | "=") textwithspaces+ -> assign_list
-  | "herhaal" (INT | NAME) "keer" INT | NAME -> repeat
+  | "herhaal" (INT | NAME) "keer" command_with_ifs -> repeat
   | text? -> error_invalid_space // error production
   | error_invalid // error production
   | "vraag" text? -> error_ask_dep_2 // error production

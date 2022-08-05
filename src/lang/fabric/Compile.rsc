@@ -198,16 +198,27 @@ AProd stitchProds(AProd base, AProd fabric) {
     int cur = 1;
 
     // NB: top down, because of nested symbols.
-    top-down visit (base.symbols) {
+    // have to do something about groups
+    // they should not count in the AST e.g. no (A | B) at x and then A | B at x+1
+    // top-down visit (base.symbols) {
 
-      case ASymbol s: {
-        if (!(s is literal)) {
-          if (cur == pos) {
-            return s;
-          }
-          cur += 1;
+    //   case ASymbol s: {
+    //     if (!(s is literal)) {
+    //       if (cur == pos) {
+    //         return s;
+    //       }
+    //       cur += 1;
+    //     }
+    //     //fail;
+    //   }
+    // }
+
+    for (ASymbol s <- base.symbols) {
+      if (!(s is literal)) {
+        if (cur == pos) {
+          return s;
         }
-        //fail;
+        cur += 1;
       }
     }
 
