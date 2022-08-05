@@ -40,6 +40,7 @@ level 3
 command
   = add: "voeg" _ "aan" _ "toe"
   | remove: "verwijder" _ "uit" _
+  
 
 list_access
   = _ "op" (_ | "willekeurig")
@@ -47,7 +48,8 @@ list_access
   
 level 4
 
-// what to do with overrides!?
+command
+  = error_ask_no_quotes: _ "is" "vraag" _
 
 level 5
 

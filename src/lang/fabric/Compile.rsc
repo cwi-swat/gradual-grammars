@@ -38,10 +38,10 @@ void compile(AGrammar g) {
     // assumes base grammar is in same directory.
     str locale = g.locale;
     println("LOG: compiling fabric grammar with reference <g.base>");
-    AGrammar base = load(g.src[file=g.base]);
+    AGrammar base = explode(load(g.src[file=g.base]));
     base = stitchGrammar(base, g);
     base.prefix += "-<locale>-"; // hack  
-    dumpFiles(explode(base));
+    dumpFiles(base);
   }
   else {
 	  dumpFiles(explode(g));
@@ -133,7 +133,7 @@ ALevel merge(list[ALevel] levels) {
          
          if (p.override) {
            if (int i <- [0..size(theRule.prods)], AProd x := theRule.prods[i], x.label == p.label) {
-             theRule.prods[i] = p[level=l.n];
+             theRule.prods[i] = p;
            }
            else {
              println("WARNING: trying to override non-existing base production labeled <p.label>");
@@ -141,7 +141,7 @@ ALevel merge(list[ALevel] levels) {
            }
          }
          else {
-  	       theRule.prods += [p[level=l.n]];
+  	       theRule.prods += [p];
          }
       }
        
@@ -154,29 +154,35 @@ ALevel merge(list[ALevel] levels) {
   return merged;
 }
 
+// this now assumes that base has been exploded
 AGrammar stitchGrammar(AGrammar base, AGrammar fabric) {
   for (int i <- [0..size(base.levels)]) {
     ALevel baseLevel = base.levels[i];
 
-    if (ALevel fabricLevel <- fabric.levels, fabricLevel.n == baseLevel.n) {
-      // we have customizations.
+    for (int j <- [0..size(baseLevel.rules)]) {
+      ARule baseRule = baseLevel.rules[j];
+      
+      for (int k <- [0..size(baseRule.prods)]) {
+        AProd baseProd = baseRule.prods[k];
+        // lookup fabric level based on level of origin of baseprod.
+        // apply all levels less than or equal to the prods level
+        // last ones first, break if applied. 
+        outer: for (int l <- [baseProd.level..0]) {
 
-      for (int j <- [0..size(baseLevel.rules)]) {
-        ARule baseRule = baseLevel.rules[j];
-        
-        if (ARule fabricRule <- fabricLevel.rules, fabricRule.nt == baseRule.nt) {
-
-          for (int k <- [0..size(baseRule.prods)]) {
-            AProd baseProd = baseRule.prods[k];
-
-            if (AProd fabricProd <- fabricRule.prods, fabricProd.label == baseProd.label) {
-              baseRule.prods[k] = stitchProds(baseProd, fabricProd);
+          for (ALevel fabricLevel <- fabric.levels, fabricLevel.n == l) {
+            if (ARule fabricRule <- fabricLevel.rules, fabricRule.nt == baseRule.nt) {
+              if (AProd fabricProd <- fabricRule.prods, fabricProd.label == baseProd.label) {
+                baseRule.prods[k] = stitchProds(baseProd, fabricProd);
+                break outer;
+              }
             }
           }
+
         }
-        
-        baseLevel.rules[j] = baseRule;
+
       }
+            
+      baseLevel.rules[j] = baseRule;
     }
 
     base.levels[i] = baseLevel;
@@ -188,19 +194,28 @@ AGrammar stitchGrammar(AGrammar base, AGrammar fabric) {
 AProd stitchProds(AProd base, AProd fabric) {
   assert fabric.label == base.label;
   
-  int astPos = 1;
-
   ASymbol lookupAST(int pos) {
     int cur = 1;
-    for (/ASymbol s <- base.symbols, !(s is literal)) {
-      if (cur == pos) {
-        return s;
+
+    // NB: top down, because of nested symbols.
+    top-down visit (base.symbols) {
+
+      case ASymbol s: {
+        if (!(s is literal)) {
+          if (cur == pos) {
+            return s;
+          }
+          cur += 1;
+        }
+        //fail;
       }
-      cur += 1;
     }
+
     throw "error: ast pos <pos> out of bounds for <base>";
   }
-  
+
+  int astPos = 1;
+
   ASymbol lookup(ASymbol s) {
     if (s is placeholder) {
       if (s.pos > 0) {

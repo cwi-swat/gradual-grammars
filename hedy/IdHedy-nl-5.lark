@@ -1,0 +1,78 @@
+%import common.NUMBER -> NUMBER
+%import common.SIGNED_INT -> INT
+_SPACE: " "+
+
+start: program
+
+comment: "#" /([^\n]+)/
+
+NAME: ID_START ID_CONTINUE*
+
+ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/
+
+ID_CONTINUE: ID_START
+  | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/
+
+_END_BLOCK: "end-block"
+
+WS: _SPACE?
+
+color: "zwart" -> black
+  | "blauw" -> blue
+  | "bruin" -> brown
+  | "grijs" -> gray
+  | "groen" -> green
+  | "oranje" -> orange
+  | "roze" -> pink
+  | "paars" -> purple
+  | "rood" -> red
+  | "wit" -> white
+  | "geel" -> yellow
+
+list_access: NAME "op" ((INT | "random") | "willekeurig")
+
+text_ask: /([^\n!?.]+)/ -> text
+
+text_list: /([^\n,،，]+)/ -> text
+
+some_spaces: /([^\r\n!?. ]+)/ (_SPACE /([^\r\n!?. ]+)/)* -> text
+
+_print_argument: (list_access | quoted_text | NAME)* -> arg
+
+text: /([^\n،,，]+)/ -> text
+
+quoted_text: (/'((?:[^\\']|\\.)*)'/ | /"((?:[^\\"]|\\.)*)"/) -> text
+
+program: "\n"* (command_with_ifs "\n"+)* command_with_ifs? -> program
+
+command_with_ifs: command -> command_no_ifs
+  | "als" condition "dan" command -> ifs
+  | "als" condition "dan" command " anders" command -> ifelse
+  | NAME "is" NAME "op" (INT | random) -> list_access_var
+
+command: "print" _print_argument? "uit" -> print
+  | NAME "is" "vraag" _print_argument? -> ask
+  | "vooruit" (NUMBER | list_access | textwithoutspaces)? -> forward
+  | "draai" (NUMBER | list_access | textwithoutspaces)? -> turn
+  | NAME "is" textwithspaces -> assign
+  | "slaap" (INT | list_access | var_access)? -> sleep
+  | "kleur" (color | list_access | textwithoutspaces)? -> color
+  | "voeg" some_spaces "aan" NAME "toe" -> add
+  | "verwijder" some_spaces "uit" NAME -> remove
+  | NAME "is" textwithspaces+ -> assign_list
+  | text? -> error_invalid_space // error production
+  | error_invalid // error production
+  | "vraag" text? -> error_ask_dep_2 // error production
+  | "echo" text? -> error_echo_dep_2 // error production
+  | error_invalid // error production
+  | "print" (textwithoutspaces | list_access | NAME)* -> error_print_no_quotes // error production
+  | textwithoutspaces (quoted_text | textwithspaces)? -> error_invalid // error production
+  | "print" (textwithoutspaces | list_access | NAME)* -> error_print_quotes // error production
+
+condition: (textwithoutspaces | INT) "is" (quoted_text | textwithoutspaces | INT) -> equality_check
+  | textwithoutspaces "in" var_access -> in_list_check
+  | textwithoutspaces "is" textwithoutspaces+ -> condition_spaces
+
+textwithspaces: /(?:[^#\n،,， ]| (?!else|başka|अन्यथा|否则|senão|ellers|alie|altrimenti|anders|inaczej|sinon|sino|אחרת|وإلا))+/ -> text
+
+textwithoutspaces: /(?:[^#\n،,， *+\-\/eiasbअ否אو]|א(?!חרת )|و(?!إلا )|否(?!则 )|अ(?!न्यथा )|b(?!aşka )|e(?!lse |llers )|s(?!inon |enão |ino )|i(?!naczej )|a(?!nders |lie |ltrimenti ))+/ -> text

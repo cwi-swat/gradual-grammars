@@ -1,0 +1,61 @@
+%import common.NUMBER -> NUMBER
+%import common.SIGNED_INT -> INT
+_SPACE: " "+
+
+start: program
+
+program: "\n"* (command "\n"+)* command?
+
+comment: "#" /([^\n]+)/
+
+textwithoutspaces: /([^\n *+-\/]+)/ -> text
+
+NAME: ID_START ID_CONTINUE*
+
+ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/
+
+ID_CONTINUE: ID_START
+  | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/
+
+_END_BLOCK: "end-block"
+
+WS: _SPACE?
+
+color: "black"
+  | "blue"
+  | "brown"
+  | "gray"
+  | "green"
+  | "orange"
+  | "pink"
+  | "purple"
+  | "red"
+  | "white"
+  | "yellow"
+
+command: "print" (textwithoutspaces | punctuation)* -> print
+  | NAME "is" "ask" (text_ask | punctuation)* -> ask
+  | "forward" (NUMBER | list_access | textwithoutspaces)? -> forward
+  | "turn" (NUMBER | list_access | textwithoutspaces)? -> turn
+  | NAME "is" (list_access | text) -> assign
+  | "sleep" (INT | list_access | var_access)? -> sleep
+  | "color" (color | list_access | textwithoutspaces)? -> color
+  | "add" some_spaces "to" NAME -> add
+  | "remove" some_spaces "form" NAME -> remove
+  | NAME "is" text_list+ -> assign_list
+  | text? -> error_invalid_space // error production
+  | textwithoutspaces text? -> error_invalid // error production
+  | error_invalid // error production
+  | "ask" text? -> error_ask_dep_2 // error production
+  | "echo" text? -> error_echo_dep_2 // error production
+  | error_invalid // error production
+
+list_access: NAME "at" (INT | "random")
+
+text: /([^\n!?.،,，]+)/ -> text
+
+text_ask: /([^\n!?.]+)/ -> text
+
+text_list: /([^\n,،，]+)/ -> text
+
+some_spaces: /([^\r\n!?. ]+)/ (_SPACE /([^\r\n!?. ]+)/)* -> text

@@ -12,7 +12,7 @@ level 1
 _SPACE =  " "+
 
 start = program
-program = "\n"* (command "\n"+)* command?
+program = program: "\n"* (command "\n"+)* command?
 
 command 
   = print: "print" text?
@@ -136,17 +136,17 @@ command
   = @override assign_list: NAME "is" {textwithspaces ","}+ 
   | @override assign:  NAME "is" textwithspaces
   | @override @error error_print_no_quotes: "print" (textwithoutspaces | list_access | NAME)* 
-  | @error @override error_invalid: textwithoutspaces (quoted_text | textwithspaces)? 
-  | @error @override error_print_quotes: "print" (textwithoutspaces | list_access | NAME)* 
+  | @error error_invalid: textwithoutspaces (quoted_text | textwithspaces)? 
+  | @error error_print_quotes: "print" (textwithoutspaces | list_access | NAME)* 
 
 
 condition 
   = equality_check: (textwithoutspaces | INT) "is" (quoted_text | textwithoutspaces | INT) 
   | in_list_check: textwithoutspaces "in" var_access
-  | condition_spaces: textwithoutspaces "is" textwithoutspaces (_SPACE textwithoutspaces)+
+  | condition_spaces: textwithoutspaces "is" textwithoutspaces+
 
 textwithspaces 
-  = @override text: /(?:[^#\n،,， ]| (?!else|başka|अन्यथा|否则|senão|ellers|alie|altrimenti|anders|inaczej|sinon|sino|אחרת|وإلا))+/ 
+  = text: /(?:[^#\n،,， ]| (?!else|başka|अन्यथा|否则|senão|ellers|alie|altrimenti|anders|inaczej|sinon|sino|אחרת|وإلا))+/ 
 
 textwithoutspaces 
   = @override text: /(?:[^#\n،,， *+\-\/eiasbअ否אو]|א(?!חרת )|و(?!إلا )|否(?!则 )|अ(?!न्यथा )|b(?!aşka )|e(?!lse |llers )|s(?!inon |enão |ino )|i(?!naczej )|a(?!nders |lie |ltrimenti ))+/  

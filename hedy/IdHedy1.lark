@@ -1,0 +1,32 @@
+%import common.NUMBER -> NUMBER
+%import common.SIGNED_INT -> INT
+_SPACE: " "+
+
+start: program
+
+program: "\n"* (command "\n"+)* command?
+
+command: "print" text? -> print
+  | "ask" text? -> ask
+  | "echo" text? -> echo
+  | "forward" (text | NUMBER)? -> forward
+  | "turn" text? -> turn
+  | text? -> error_invalid_space // error production
+  | textwithoutspaces text? -> error_invalid // error production
+
+comment: "#" /([^\n]+)/
+
+text: /([^\n]+)/ -> text
+
+textwithoutspaces: /([^\n *+-\/]+)/ -> text
+
+NAME: ID_START ID_CONTINUE*
+
+ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/
+
+ID_CONTINUE: ID_START
+  | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/
+
+_END_BLOCK: "end-block"
+
+WS: _SPACE?

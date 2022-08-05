@@ -33,6 +33,8 @@ error_echo_dep_2: "echo" (_SPACE error_text_dep_2)?
 
 error_text_dep_2: /([^\n]+)/ -> text
 
+sleep: ("slaap" | "sleep") _SPACE
+
 text_ask: /([^\r\n!?.]+)/ -> text
 
 punctuation: PUNCTUATION -> punctuation
@@ -43,15 +45,45 @@ PUNCTUATION: "!"
 
 var: NAME -> var
 
-assign: var _SPACE "is" _SPACE (list_access | text) -> assign
+assign: var _SPACE "is" _SPACE text -> assign
+  | var _SPACE "is" _SPACE (list_access | text) -> assign
 
 assign_list: var _SPACE "is" _SPACE text_list (_COMMA text_list)+
 
 text_list: /([^\r\n,،]+)/ -> text
 
+random: ("willekeurig" | "random")
+
+list_access: var _SPACE "op" _SPACE INT -> list_access
+
+turtle: ("vooruit" | "forward") _SPACE -> forward
+  | ("vooruit" | "forward") _SPACE -> turn
+  | "forward" (_SPACE (INT | textwithoutspaces))? -> forward
+  | "turn" (_SPACE (textwithoutspaces))? -> turn
+  | "forward" (_SPACE (INT | list_access | textwithoutspaces))? -> forward
+  | "turn" (_SPACE (list_access | textwithoutspaces))? -> turn
+
 some_spaces: /([^\r\n!?. ]+)/ (_SPACE /([^\r\n!?. ]+)/)* -> text_with_spaces
 
+add: ("voeg" | "add") _SPACE some_spaces _SPACE ("toe aan" | "to") _SPACE var
+
+remove: ("verwijder" | "remove") _SPACE some_spaces _SPACE ("uit" | "from") _SPACE var
+
 command: print
+  | ask
+  | echo
+  | turtle
+  | error_invalid_space
+  | comment
+  | error_invalid
+  | assign
+  | error_ask_dep_2
+  | error_echo_dep_2
+  | sleep
+  | assign_list
+  | add
+  | remove
+  | print
   | ask
   | turtle
   | assign_list
@@ -66,33 +98,30 @@ command: print
 
 var_access: NAME
 
-print: "print" (_SPACE _print_argument)? -> print
+print: "print" (_SPACE text)?
+  | "print" (_SPACE _print_argument)?
+  | "print" (_SPACE _print_argument)? -> print
 
 error_print_no_quotes: "print" _SPACE text -> error_print_nq
 
+ask: "vraag" _SPACE
+  | var _SPACE "is" _SPACE "vraag" _SPACE
+  | var _SPACE "is" _SPACE "ask" (_SPACE _print_argument)?
+
 error_ask_no_quotes: var _SPACE "is" _SPACE "ask" _SPACE text -> error_print_nq
 
-_print_argument: (_SPACE | list_access | quoted_text | var_access)*
+_print_argument: (_SPACE | textwithoutspaces | punctuation)*
+  | (_SPACE | list_access | textwithoutspaces | punctuation)*
+  | (_SPACE | list_access | quoted_text | var_access)*
 
-textwithoutspaces: /([^\r\n, *+-\/]+)/ -> text
+textwithoutspaces: /([^\n *+-\/]+)/ -> text
+  | /([^\r\n!?. ]+)/ -> text
+  | /([^\r\n, *+-\/]+)/ -> text
 
-text: /([^\n,]+)/ -> text
+text: /([^\n]+)/ -> text
+  | /([^\r\n,!?،.]+)/ -> text
+  | /([^\n,]+)/ -> text
 
 quoted_text_no_escape: /'([^']*)'/ -> text
 
 quoted_text: /'((?:[^\\']|\\.)*)'/ -> text
-
-random: ("willekeurig" | "random")
-
-list_access: var _SPACE "op" _SPACE (INT | random) -> list_access
-
-add: ("voeg" | "add") _SPACE some_spaces _SPACE ("toe aan" | "to") _SPACE var
-
-remove: ("verwijder" | "remove") _SPACE some_spaces _SPACE ("uit" | "from") _SPACE var
-
-ask: var _SPACE "is" _SPACE "vraag" (_SPACE _print_argument)?
-
-sleep: ("slaap" | "sleep") (_SPACE INT)?
-
-turtle: ("vooruit" | "forward") (_SPACE (INT | list_access | textwithoutspaces))? -> forward
-  | ("draai" | "turn") (_SPACE (list_access | textwithoutspaces))? -> turn

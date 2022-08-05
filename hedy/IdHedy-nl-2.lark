@@ -1,0 +1,49 @@
+%import common.NUMBER -> NUMBER
+%import common.SIGNED_INT -> INT
+_SPACE: " "+
+
+start: program
+
+program: "\n"* (command "\n"+)* command? -> program
+
+comment: "#" /([^\n]+)/
+
+text: /([^\n]+)/ -> text
+
+textwithoutspaces: /([^\n *+-\/]+)/ -> text
+
+NAME: ID_START ID_CONTINUE*
+
+ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/
+
+ID_CONTINUE: ID_START
+  | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/
+
+_END_BLOCK: "end-block"
+
+WS: _SPACE?
+
+command: "print" (textwithoutspaces | punctuation)* "uit" -> print
+  | NAME "is" "vraag" (text | punctuation)* -> ask
+  | "vooruit" (NUMBER | textwithoutspaces)? -> forward
+  | "draai" (NUMBER | textwithoutspaces)? -> turn
+  | NAME "is" text -> assign
+  | "slaap" (INT | NAME)? -> sleep
+  | "kleur" (color | textwithoutspaces)? -> color
+  | text? -> error_invalid_space // error production
+  | textwithoutspaces text? -> error_invalid // error production
+  | error_invalid // error production
+  | "vraag" text? -> error_ask_dep_2 // error production
+  | "echo" text? -> error_echo_dep_2 // error production
+
+color: "zwart" -> black
+  | "blauw" -> blue
+  | "bruin" -> brown
+  | "grijs" -> gray
+  | "groen" -> green
+  | "oranje" -> orange
+  | "roze" -> pink
+  | "paars" -> purple
+  | "rood" -> red
+  | "wit" -> white
+  | "geel" -> yellow

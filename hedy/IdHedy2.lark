@@ -1,0 +1,49 @@
+%import common.NUMBER -> NUMBER
+%import common.SIGNED_INT -> INT
+_SPACE: " "+
+
+start: program
+
+program: "\n"* (command "\n"+)* command?
+
+comment: "#" /([^\n]+)/
+
+text: /([^\n]+)/ -> text
+
+textwithoutspaces: /([^\n *+-\/]+)/ -> text
+
+NAME: ID_START ID_CONTINUE*
+
+ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/
+
+ID_CONTINUE: ID_START
+  | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/
+
+_END_BLOCK: "end-block"
+
+WS: _SPACE?
+
+command: "print" (textwithoutspaces | punctuation)* -> print
+  | NAME "is" "ask" (text | punctuation)* -> ask
+  | "forward" (NUMBER | textwithoutspaces)? -> forward
+  | "turn" (NUMBER | textwithoutspaces)? -> turn
+  | NAME "is" text -> assign
+  | sleep (INT | NAME)? -> sleep
+  | "color" (color | textwithoutspaces)? -> color
+  | text? -> error_invalid_space // error production
+  | textwithoutspaces text? -> error_invalid // error production
+  | error_invalid // error production
+  | "ask" text? -> error_ask_dep_2 // error production
+  | "echo" text? -> error_echo_dep_2 // error production
+
+color: "black"
+  | "blue"
+  | "brown"
+  | "gray"
+  | "green"
+  | "orange"
+  | "pink"
+  | "purple"
+  | "red"
+  | "white"
+  | "yellow"

@@ -1,0 +1,67 @@
+%import common.NUMBER -> NUMBER
+%import common.SIGNED_INT -> INT
+_SPACE: " "+
+
+start: program
+
+program: "\n"* (command "\n"+)* command? -> program
+
+comment: "#" /([^\n]+)/
+
+NAME: ID_START ID_CONTINUE*
+
+ID_START: /[\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}_]+/
+
+ID_CONTINUE: ID_START
+  | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/
+
+_END_BLOCK: "end-block"
+
+WS: _SPACE?
+
+color: "zwart" -> black
+  | "blauw" -> blue
+  | "bruin" -> brown
+  | "grijs" -> gray
+  | "groen" -> green
+  | "oranje" -> orange
+  | "roze" -> pink
+  | "paars" -> purple
+  | "rood" -> red
+  | "wit" -> white
+  | "geel" -> yellow
+
+list_access: NAME "op" ((INT | "random") | "willekeurig")
+
+text_ask: /([^\n!?.]+)/ -> text
+
+text_list: /([^\n,،，]+)/ -> text
+
+some_spaces: /([^\r\n!?. ]+)/ (_SPACE /([^\r\n!?. ]+)/)* -> text
+
+command: "print" _print_argument? "uit" -> print
+  | NAME "is" "vraag" _print_argument? -> ask
+  | "vooruit" (NUMBER | list_access | textwithoutspaces)? -> forward
+  | "draai" (NUMBER | list_access | textwithoutspaces)? -> turn
+  | NAME "is" (list_access | text) -> assign
+  | "slaap" (INT | list_access | var_access)? -> sleep
+  | "kleur" (color | list_access | textwithoutspaces)? -> color
+  | "voeg" some_spaces "aan" NAME "toe" -> add
+  | "verwijder" some_spaces "uit" NAME -> remove
+  | NAME "is" text_list+ -> assign_list
+  | text? -> error_invalid_space // error production
+  | textwithoutspaces text? -> error_invalid // error production
+  | error_invalid // error production
+  | "vraag" text? -> error_ask_dep_2 // error production
+  | "echo" text? -> error_echo_dep_2 // error production
+  | error_invalid // error production
+  | NAME "is" "vraag" text -> error_ask_no_quotes // error production
+  | "print" text -> error_print_no_quotes // error production
+
+_print_argument: (list_access | quoted_text | NAME)* -> arg
+
+textwithoutspaces: /([^\n،,， ]+)/ -> text
+
+text: /([^\n،,，]+)/ -> text
+
+quoted_text: (/'((?:[^\\']|\\.)*)'/ | /"((?:[^\\"]|\\.)*)"/) -> text

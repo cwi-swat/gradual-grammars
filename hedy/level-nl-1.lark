@@ -18,7 +18,12 @@ command: print
 
 print: "print" (_SPACE text)?
 
+ask: "vraag" _SPACE
+
 echo: "echo" (_SPACE text)?
+
+turtle: ("vooruit" | "forward") _SPACE -> forward
+  | ("vooruit" | "forward") _SPACE -> turn
 
 error_invalid_space: _SPACE text?
 
@@ -40,8 +45,3 @@ ID_CONTINUE: ID_START
   | /[\p{Mn}\p{Mc}\p{Nd}\p{Pc}·]+/
 
 _END_BLOCK: "end-block"
-
-ask: "vraag" (_SPACE text)?
-
-turtle: ("vooruit" | "forward") (_SPACE (text | NUMBER))? -> forward
-  | ("draai" | "turn") (_SPACE text)? -> turn
