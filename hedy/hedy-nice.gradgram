@@ -94,11 +94,9 @@ level 4
 command
   = @override print: "print" _print_argument?
   | @override ask: NAME "is" "ask" _print_argument?
-  | @error error_ask_no_quotes: "NAME" "is" "ask" text
-  | @error error_invalid_space 
+  | @error error_ask_no_quotes: NAME "is" "ask" text
   | @error error_print_no_quotes: "print" text
-  | @error error_invalid
-
+  
 
 _print_argument = arg: (list_access | quoted_text | NAME)*
 
@@ -147,7 +145,78 @@ textwithspaces
 textwithoutspaces 
   = @override text: /(?:[^#\n،,， *+\-\/eiasbअ否אو]|א(?!חרת )|و(?!إلا )|否(?!则 )|अ(?!न्यथा )|b(?!aşka )|e(?!lse |llers )|s(?!inon |enão |ino )|i(?!naczej )|a(?!nders |lie |ltrimenti ))+/  
 
+level 6
+
+_print_argument 
+  = @override arg: (quoted_text | list_access | print_expression)*
+
+print_expression 
+  = print_expression: INT 
+  | var: NAME 
+  | @error error_unsupported_number: /([-+]?(\d+[\.،,，]\d+))/ 
+  | expression
+
+command
+  = @override ask: NAME ("is" | "=") "as" _print_argument?
+  | @override assign_list: NAME ("is" | "=") {textwithspaces ","}+
+  | @override assign: NAME ("is" |"=") (expression | textwithoutspaces | textwithspaces) 
+  | @override sleep: "sleep" (INT | list_access | NAME | expression)?
+
+
+condition
+  = @override equality_check: (textwithoutspaces | INT) ("is" | "=") (textwithoutspaces | quoted_text | INT)
+
+command_with_ifs
+  = @override list_access_var: NAME ("is" | "=") NAME "at" (INT | random)
+
+expression
+  = simple_expression: simple_expression
+  | multiplication: expression "*" atom 
+  | division: expression "/" atom 
+  | addition: expression "+" atom 
+  | subtraction: expression "-" atom
+
+simple_expression
+  = multiplication: atom "*" atom 
+  | division: atom "/" atom  
+  | addition: atom "+" atom 
+  | subtraction: atom "-" atom
+
+atom
+  = int: INT 
+  | neg: "-" INT 
+  | var: NAME
+  | @error error_unsupported_number: /([-+]?(\d+[\.،,，]\d+))/
+  | txt: textwithoutspaces
+
+level 7
+
+remove error_print_no_quotes
+
+command
+  = repeat: "repeat" (INT | NAME) "times" command_with_ifs
+  | @error error_repeat_no_command: "repeat" (INT | NAME) "times" 
+  | @error error_repeat_no_print: "repeat" (INT | NAME) "times" _print_argument 
+  | @error error_repeat_no_times: "repeat" (INT | NAME) command_with_ifs
 
 
 
+level 8
 
+remove ifs, ifelse
+
+command
+  = ifs: "if" condition _EOL {command "\n"}+ _EOL _END_BLOCK
+  | ifelse: "if" condition _EOL {command "\n"}+ _EOL _END_BLOCK _EOL "else" {command "\n"}+ _EOL _END_BLOCK
+  | @override repeat: "repeat" (INT | NAME) "times"  {command "\n"}+  "\n" _END_BLOCK
+
+condition 
+  = @override equality_check: (textwithoutspaces | NUMBER) ("is" | "=") (textwithoutspaces | NUMBER)+ 
+
+
+level 9
+
+level 10
+
+command 
+  = for_list: "for" NAME "in" NAME _EOL {command "\n"}+ _EOL _END_BLOCK
