@@ -64,6 +64,10 @@ level 7
 
 command
   = repeat: "herhaal" _ "keer" _
+  | error_repeat_no_command: "herhaal" _ "keer" 
+  | error_repeat_no_print: "herhaal" _ "keer" _
+  | error_repeat_no_times: "herhaal" _ _
+
 
 level 8
 

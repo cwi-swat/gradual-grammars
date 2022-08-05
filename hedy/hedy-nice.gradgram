@@ -157,10 +157,10 @@ _print_argument
   = @override arg: (quoted_text | list_access | print_expression)*
 
 print_expression 
-  = print_expression: INT 
+  = num: INT 
   | var: NAME 
   | @error error_unsupported_number: /([-+]?(\d+[\.،,，]\d+))/ 
-  | expression
+  | expr: expression
 
 command
   = @override ask: NAME ("is" | "=") "ask" _print_argument?

@@ -49,9 +49,9 @@ textwithoutspaces: /(?:[^#\n،,， *+\-\/eiasbअ否אو]|א(?!חרת )|و(?!إ�
 
 _print_argument: (quoted_text | list_access | print_expression)* -> arg
 
-print_expression: INT -> print_expression
+print_expression: INT -> num
   | NAME -> var
-  | expression
+  | expression -> expr
   | /([-+]?(\d+[\.،,，]\d+))/ -> error_unsupported_number // error production
 
 command: "print" _print_argument? "uit" -> print
