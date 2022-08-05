@@ -1,57 +1,78 @@
 module HedyNL
 
-modifies "hedy.gradgram"
+modifies "hedy-nice.gradgram"
 
 locale nl
 
 level 1
 
-ask = "vraag" _
-
-turtle
-  = ("vooruit"|"forward") _
-  | ("draai"|"turn") _
-
-  
- 
- 
+command 
+  = ask: "vraag" _
+  | turn: "draai" _
+  | forward: "vooruit" _
+  | print: "print" _ "uit"
 
 
 level 2
 
-ask = _ _ "is" _ "vraag" _
+command
+  = sleep: "slaap" _
+  | ask: _ "is" "vraag" _
+  | color: "kleur" _
+  | error_ask_dep_2: "vraag" _
 
-sleep = ("slaap"|"sleep") _
+
+color 
+  = black: "zwart" 
+  | blue: "blauw" 
+  | brown: "bruin" 
+  | gray: "grijs" 
+  | green: "groen" 
+  | orange: "oranje" 
+  | pink: "roze" 
+  | purple: "paars" 
+  | red: "rood" 
+  | white: "wit" 
+  | yellow: "geel"
 
 level 3
 
-random = ("willekeurig"|"random")
+command
+  = add: "voeg" _ "aan" _ "toe"
+  | remove: "verwijder" _ "uit" _
 
-list_access = _ _ "op" _ _
-
-add = ("voeg"|"add") _ _ _ ("toe aan"|"to") _ _
-
-remove = ("verwijder"|"remove") _ _ _ ("uit"|"from") _ _
-
+list_access
+  = _ "op" (_ | "willekeurig")
 
   
 level 4
 
+// what to do with overrides!?
+
 level 5
 
-ifelse = "als" _ _ _ _ _ "anders" _ _
-
-ifs = "als" _ _ _ _
+command_with_ifs
+  = ifs: "als" _ "dan" _
+  | ifelse: "als" _ "dan" _ " anders" _
+  | list_access_var: _ "is" _ "op" _
 
 level 6
 
-ask_is = _ _ "is" _ "vraag" _
+level 7
 
-ask_equals = _ "=" "vraag" _
+command
+  = repeat: "herhaal" _ "keer" _
 
+level 8
 
+command 
+  = ifs: "als" _ "dan" "\n" _ "\n" _
+  | ifelse: "als" _ "dan" "\n" _ "\n" _ "\n" "anders" "\n" _ "\n" _
+  | repeat: "herhaal" _  "keer" _ "\n" _
 
-level 16
+level 9
 
+level 10
 
-    
+command
+  = "voor" _ "in" _ "\n" _ "\n" _

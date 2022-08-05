@@ -3,19 +3,16 @@ module Hedy
 import common.NUMBER -> NUMBER
 import common.SIGNED_INT -> INT
 
-prefix "Hedy"
+prefix "IdHedy"
 
 layout WS = _SPACE?
 
 level 1
 
 _SPACE =  " "+
-_SINGLE_QUOTE = "'" | "‘" | "’"
-_COMMA = "," | "،" 
-_EOL = "\r"?"\n"
 
 start = program
-program = _EOL* (command _EOL+)* command?
+program = "\n"* (command "\n"+)* command?
 
 command 
   = print: "print" text?
@@ -27,8 +24,6 @@ command
   | @error error_invalid: textwithoutspaces text?
 
 comment = "#" /([^\n]+)/
-
-_EOL = "\r"?"\n"
 
 text = text: /([^\n]+)/  //anything can be parsed except for a newline
 textwithoutspaces = text: /([^\n *+-\/]+)/  //anything can be parsed except for spaces (plus: a newline)
@@ -49,7 +44,7 @@ remove echo
 
 command
   = assign: NAME "is" text 
-  | sleep: sleep (INT | NAME)?
+  | sleep: "sleep" (INT | NAME)?
   | @error error_invalid
   | @override print: "print" (textwithoutspaces | punctuation)*
   | @override ask: NAME "is" "ask" (text | punctuation)*
@@ -59,13 +54,24 @@ command
   | @error error_ask_dep_2: "ask" text? 
   | @error error_echo_dep_2: "echo" text? 
 
-color = "black" | "blue" | "brown" | "gray" | "green" | "orange" | "pink" | "purple" | "red" | "white" | "yellow"
+color 
+  = black: "black" 
+  | blue: "blue" 
+  | brown: "brown" 
+  | gray: "gray" 
+  | green: "green" 
+  | orange: "orange" 
+  | pink: "pink" 
+  | purple: "purple" 
+  | red: "red" 
+  | white: "white" 
+  | yellow: "yellow"
 
 level 3
 
 command
   = add: "add" some_spaces "to" NAME
-  | remove: "remove" some_spaces "form" NAME
+  | remove: "remove" some_spaces "from" NAME
   | @override ask: NAME "is" "ask" (text_ask | punctuation)*
   | @override assign: NAME "is" (list_access | text) 
   | @override forward: "forward" (NUMBER | list_access | textwithoutspaces)?
@@ -114,16 +120,16 @@ remove error_invalid, error_ask_no_quotes
 
 //TODO
 // program: _empty_program | _non_empty_program
-// _empty_program: (_EOL | _SPACE)*
-// _non_empty_program: _EOL* (command | error_invalid) _SPACE* (_EOL+ command _SPACE*)* _EOL* //lines may end on spaces and might be separated by many newlines
+// _empty_program: ("\n" | _SPACE)*
+// _non_empty_program: "\n"* (command | error_invalid) _SPACE* ("\n"+ command _SPACE*)* "\n"* //lines may end on spaces and might be separated by many newlines
 
 
-program = @override program: _EOL* (command_with_ifs _EOL+)* command_with_ifs?
+program = @override program: "\n"* (command_with_ifs "\n"+)* command_with_ifs?
 
 command_with_ifs 
   = command_no_ifs: command
-  | ifelse: "if" condition command
-  | ifs: "if" condition command  "else" command
+  | ifs: "if" condition command
+  | ifelse: "if" condition command  "else" command
   | list_access_var: NAME "is" NAME "at" (INT | random)
 
 command 
@@ -157,7 +163,7 @@ print_expression
   | expression
 
 command
-  = @override ask: NAME ("is" | "=") "as" _print_argument?
+  = @override ask: NAME ("is" | "=") "ask" _print_argument?
   | @override assign_list: NAME ("is" | "=") {textwithspaces ","}+
   | @override assign: NAME ("is" |"=") (expression | textwithoutspaces | textwithspaces) 
   | @override sleep: "sleep" (INT | list_access | NAME | expression)?
@@ -206,8 +212,8 @@ level 8
 remove ifs, ifelse
 
 command
-  = ifs: "if" condition _EOL {command "\n"}+ _EOL _END_BLOCK
-  | ifelse: "if" condition _EOL {command "\n"}+ _EOL _END_BLOCK _EOL "else" {command "\n"}+ _EOL _END_BLOCK
+  = ifs: "if" condition "\n" {command "\n"}+ "\n" _END_BLOCK
+  | ifelse: "if" condition "\n" {command "\n"}+ "\n" _END_BLOCK "\n" "else" {command "\n"}+ "\n" _END_BLOCK
   | @override repeat: "repeat" (INT | NAME) "times"  {command "\n"}+  "\n" _END_BLOCK
 
 condition 
@@ -219,4 +225,4 @@ level 9
 level 10
 
 command 
-  = for_list: "for" NAME "in" NAME _EOL {command "\n"}+ _EOL _END_BLOCK
+  = for_list: "for" NAME "in" NAME "\n" {command "\n"}+ "\n" _END_BLOCK
