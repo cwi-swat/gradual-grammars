@@ -8,9 +8,9 @@ lexical String =
 
 
 syntax Type =
-  stringType: "tekst" 
-  | integerType: "getal" 
+  integerType: "getal" 
   | booleanType: "waarheidswaarde" 
+  | stringType: "tekst" 
   ;
 
 lexical Label =
@@ -36,19 +36,19 @@ lexical Integer =
   ;
 
 keyword Reserved =
-  "dan" 
+  "groter" 
   | "tel" 
   | "waar" 
-  | "groter" 
   | "bij" 
   | "op" 
   | "onwaar" 
+  | "dan" 
   | "niet" 
   ;
 
 syntax Bool =
-  t: "waar" 
-  | f: "onwaar" 
+  f: "onwaar" 
+  | t: "waar" 
   ;
 
 lexical StrChar =
@@ -61,16 +61,16 @@ layout Standard  =
   ;
 
 syntax Question =
-  @Foldable group: "{"  Question* questions  "}" 
+  ifThenElse: "als"  Expr cond  "dan"  ":"  Question then  "anders"  Question els 
+  | @Foldable group: "{"  Question* questions  "}" 
   | ifThen: "als"  Expr cond  "dan"  ":"  Question!dummy then  () !>> "anders" 
-  | question: "vraag"  Id var  "met"  Label label  ":"  Type type 
-  | ifThenElse: "als"  Expr cond  "dan"  ":"  Question then  "anders"  Question els 
   | computed: Label label  Id var  ":"  Type type  "="  Expr expr 
+  | question: "vraag"  Id var  "met"  Label label  ":"  Type type 
   ;
 
 syntax Expr =
-  var: Id name 
-  | bracket "("  Expr  ")" 
+  bracket "("  Expr  ")" 
+  | var: Id name 
   | \value: Value 
   > not: "niet"  Expr 
   > left 
@@ -78,16 +78,16 @@ syntax Expr =
       | left div: Expr  "/"  Expr 
       )
   > left 
-      ( left add: "tel"  Expr  "op"  "bij"  Expr 
-      | left sub: Expr  "-"  Expr 
+      ( left sub: Expr  "-"  Expr 
+      | left add: Expr  "opgeteld"  "bij"  Expr 
       )
   > left 
-      ( left leq: Expr  "\<="  Expr 
+      ( left eq: Expr  "=="  Expr 
       | left lt: Expr  "\<"  Expr 
+      | left leq: Expr  "\<="  Expr 
       | left gt: Expr  "groter"  "dan"  Expr 
       | left geq: Expr  "\>="  Expr 
       | left neq: Expr  "!="  Expr 
-      | left eq: Expr  "=="  Expr 
       )
   > left 
       ( left and: Expr  "&&"  Expr 

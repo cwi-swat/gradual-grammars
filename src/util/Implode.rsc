@@ -73,9 +73,11 @@ node implodeToCons(Tree t, Symbol adt, map[Symbol, Production] defs, ASTreorder 
       
       type[value] theType = type(adt, defs);  
       return typeCast(#node, make(theType, l, impArgs, 
-        ( "src": t@\loc | label("src", \loc()) <- kws )));
+        ( "src": t@\loc | label("src", \loc()) <- kws, (t@\loc?) )));
     }  
-    throw ImplodeException("Could not find AST constructor for type <n> with name <l>", t@\loc);
+
+    throw ImplodeException("Could not find AST constructor for type <n> with name <l>"
+      , t@\loc? ? t@\loc : |file:///unknown|);
   }
   
   throw ImplodeException("Expected a parse tree with a production label, not `<t>`", t@\loc);
@@ -131,7 +133,8 @@ value implodeToNode(Tree t) {
    if (appl(prod(label(str l, _), _, _), list[Tree] args) := t) {
      list[Tree] astArgs = astArgs(t.args);
      list[Symbol] astTypes = [ \node() | _ <- astArgs ];
-     return makeNode(l, implodeArgs(astArgs, astTypes, (), {}, ""), keywordParameters=("src": t@\loc));
+     return makeNode(l, implodeArgs(astArgs, astTypes, (), {}, ""), 
+        keywordParameters= t@\loc? ? ("src": t@\loc): ());
    }
    
    // no label present

@@ -58,7 +58,7 @@ tuple[start[Form], int] unravelWithTime(start[Form] f) {
 }
 
 
-alias Bench = rel[int size, int parse, int unravel];
+alias Bench = rel[int size, int parse, int unravel, int implode];
 
 
 void randomizedTests(int n=100, int depth=10) {
@@ -66,12 +66,15 @@ void randomizedTests(int n=100, int depth=10) {
 
   Bench bench = {};
 
+  int nActual = 0;
+
   for (int i <- [0..n]) {
         println("# ITERATION: <i>");
 
         start[Form] pt = genSenTop(nl, depth=depth);
         
         str src = "<pt>";
+
         //println(src);
         int t0 = getMilliTime();
         try {
@@ -91,18 +94,26 @@ void randomizedTests(int n=100, int depth=10) {
             continue;
         }
         int t1 = getMilliTime();
-
+        nActual += 1;
         <ref, n> = unravelWithTime(pt);
-        bench += {<size(src), t1 - t0, n>};
-        println("size = <size(src)>, parse = <t1 - t0>, unravel = <n>");
+        
+        int t2 = getMilliTime();
+        z = implodeQL_NL(pt);
+        int tImplode = getMilliTime();
+        
+        bench += {<size(src), t1 - t0, n, tImplode - t2>};
+
+        println("size = <size(src)>, parse = <t1 - t0>, unravel = <n>, implode <tImplode - t2>");
 
   }
 
-  str csv = "size,parse,unravel\n";
-  for (<a, b, c> <- bench) {
-    csv += "<a>,<b>,<c>\n";
+  str csv = "size,parse,unravel,implode\n";
+  for (<a, b, c, d> <- bench) {
+    csv += "<a>,<b>,<c>,<d>\n";
   }
 
 
-  writeFile(|project://gradual-grammars/unravel.csv|, csv);
+  str sActual = "<nActual>";
+  str sDepth = "<depth>";
+  writeFile(|project://gradual-grammars/unravel-n<sActual>-d<sDepth>.csv|, csv);
 }
