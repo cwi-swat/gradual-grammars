@@ -46,12 +46,17 @@ The working of Fabric can be explored by opening the files with the extension "g
 ## Overhead of unravel 
 
 Import `/src/lang/fabric/demo/Main` in the terminal by issuing `import lang::fabric::demo::Main;`. 
-Then execute `randomizedTests(n=100, depth=10);`, where you can very the values for `n` (= number of trials), and `depth` (maximum sentence depth).
+Then execute `randomizedTests(n=100, depth=10);`, where you can vary the values for `n` (= number of trials), and `depth` (maximum sentence depth).
 The results will be written to `unravel.csv` file in the root folder of the project.
 
-If you have [gnuplot](http://www.gnuplot.info/) available, you may plot the result by executing `gnuplot -p unravel.gnuplot`, and open the resulting `unravel.pdf`.
+If you have [gnuplot](http://www.gnuplot.info/) available, you may plot the result by executing `gnuplot -p unravel.gnuplot` (in the project folder), and inspect the resulting `unravel.pdf`.
+
+*NB*: this benchmark is based on randomized sentence generation, so the results will never be exactly the same as in the paper. However, the point is to confirm linear time in the size of the input, and relative overhead of `unravel` w.r.t. to `implode`.
 
 
+## Contact
+
+[Felienne Hermans](mailto:f.f.j.hermans@vu.nl)
 
 
 
