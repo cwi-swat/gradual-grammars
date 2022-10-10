@@ -56,6 +56,8 @@ If you have [gnuplot](http://www.gnuplot.info/) available, you may plot the resu
 
 ## Contact
 
+[Tijs van der Storm](mailto:storm@cwi.nl)
+
 [Felienne Hermans](mailto:f.f.j.hermans@vu.nl)
 
 
