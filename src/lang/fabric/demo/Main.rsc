@@ -115,5 +115,5 @@ void randomizedTests(int n=100, int depth=10) {
 
   str sActual = "<nActual>";
   str sDepth = "<depth>";
-  writeFile(|project://gradual-grammars/unravel-imp-n<sActual>-d<sDepth>.csv|, csv);
+  writeFile(|project://gradual-grammars/unravel.csv|, csv);
 }

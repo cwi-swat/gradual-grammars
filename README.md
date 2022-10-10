@@ -25,6 +25,8 @@ The working of Fabric can be explored by opening the files with the extension "g
 
 ## Fabric embedded in Rascal
 
+### Example DSL: QL
+
 - `src/lang/fabric/demo/QL_[1-5].rsc`: leveled grammar of the QL DSL.
 
 - `src/lang/fabric/demo/QL_NL_fabric.rsc`: Dutch Fabric grammar of QL.
@@ -33,6 +35,7 @@ The working of Fabric can be explored by opening the files with the extension "g
 
 - `src/lang/fabric/demo/Main.rsc`: run the `main()` function to see how a Dutch QL program is unraveled to its base syntax, and to an AST using `implode` (see `src/util/Implode.rsc` for the implementation of `implode`).
 
+### Rebel2: a DSL for state-based modeling
 
 - `src/lang/rebel2/`: the base grammar of the Rebel2 DSL.
 
@@ -40,6 +43,11 @@ The working of Fabric can be explored by opening the files with the extension "g
 
 - `src/lang/rebel2/dutch/Main.rsc`: run the `main()` to see how Dutch Rebel2 files (in subfolder `demo`) are unraveld to their base syntax.
 
+## Overhead of unravel 
+
+Import `/src/lang/fabric/demo/Main` in the terminal by issuing `import lang::fabric::demo::Main;`. 
+Then execute `randomizedTests(n=100, depth=10);`, where you can very the values for `n` (= number of trials), and `depth` (maximum sentence depth).
+The results will be written to `unravel.csv` file in the root folder of the project.
 
 
 
