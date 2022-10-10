@@ -34,3 +34,12 @@ The working of Fabric can be explored by opening the files with the extension "g
 - `src/lang/fabric/demo/Main.rsc`: run the `main()` function to see how a Dutch QL program is unraveled to its base syntax, and to an AST using `implode` (see `src/util/Implode.rsc` for the implementation of `implode`).
 
 
+- `src/lang/rebel2/`: the base grammar of the Rebel2 DSL.
+
+- `src/lang/rebel2/dutch`: the Dutch translation of the Rebel2 DSL.
+
+- `src/lang/rebel2/dutch/Main.rsc`: run the `main()` to see how Dutch Rebel2 files (in subfolder `demo`) are unraveld to their base syntax.
+
+
+
+

@@ -8,22 +8,6 @@ import String;
 import List;
 
 
-
-/*
-
-Idea: infer keyword translation from formatted examples (canonical/complete/etc.)
-
-- define formatter based on AST: the default one just formats
-- but it can be parameterized by helper functions which insert brackets
-  and/or meta notation, which allows the text to be generically parsed.
-- as a result we get a structure that can be matched against the concrete grammar
-  to derive a translated one.
-  
-Problem: how to "fix" implode in case of reordered things.
-
-
-*/
-
 loc levelLoc(str name, loc base, str prefix, ALevel l)
   = base[file="<prefix><l.n>.lark"];
 
@@ -53,7 +37,7 @@ void dumpFiles(AGrammar g) {
   for (int i <- [0..size(g.levels)]) {
     println("LOG: writing level <g.levels[i].n>");
     writeFile(levelLoc(g.name, g.src, g.prefix, g.levels[i]), 
-    	toLark(g, g.levels[i]));
+    	toLark(g, interleaveLayout(nonterminal(g.ws), normalize(g.levels[i]))));
   }
 }
 
@@ -94,11 +78,10 @@ list[&T] interleave(&T elt, list[&T] lst)
   
 @doc{Interleave layout inbetween all sequences of symbols (requires normalize)}
 ALevel interleaveLayout(ASymbol sym, ALevel level) {
-  return level;
-  // return visit (level) {
-  //   case AProd p => p[symbols = interleave(sym, p.symbols)]
-  //   case seq(list[ASymbol] ss) => seq(interleave(sym, ss))
-  // }
+  return visit (level) {
+    case AProd p => p[symbols = interleave(sym, p.symbols)]
+    case seq(list[ASymbol] ss) => seq(interleave(sym, ss))
+  }
 }
 
 @doc{Merge levels into one, observing remove and override}
