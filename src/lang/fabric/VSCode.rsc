@@ -1,5 +1,5 @@
 
-module VSCode
+module lang::fabric::VSCode
 
 import util::LanguageServer;
 import ParseTree;
@@ -59,7 +59,7 @@ void main() {
             pathConfig(srcs = [|std:///|, |project://gradual-grammars/src|]),
             "Gradual Grammar",
             "gradgram",
-            "VSCode",
+            "lang::fabric::VSCode",
             "myLanguageContributor"
         )
     );

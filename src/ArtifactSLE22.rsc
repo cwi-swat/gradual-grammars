@@ -1,7 +1,7 @@
 module ArtifactSLE22
 
-import lang::fabric::IDE;
+import lang::fabric::VSCode;
 
 void setup() {
-    setupIDE();
+    lang::fabric::VSCode::main();
 }

@@ -3,7 +3,7 @@ formulier belastingDienst {
   vraag huisGekocht met "Heb je een huis gekocht in 2020?": waarheidswaarde
   vraag hebJeEenLening met "Heb je een lening?": waarheidswaarde
 
-  als niet (huisVerkocht groter dan tel 3 op bij 4) dan: {
+  als niet (huisVerkocht groter dan 3 opgeteld bij 4) dan: {
     vraag schuld met "Wat is je schuld van het verkochte huis?": getal
     vraag verkoopPrijs met "Wat was de verkoopprijs?": getal
     "De rest waarde is:" restWaarde: getal = 
