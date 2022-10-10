@@ -20,7 +20,17 @@ The working of Fabric can be explored by opening the files with the extension "g
 
 - `src/lang/fabric/demo/{QL,QL-NL}.gradgram`: toy gradual grammar for the QL DSL and its translation to Dutch.
 
-- `hedy/*.gradgram`: 
+- `hedy/*.gradgram`: the Hedy' gradual grammar and translation to Dutch.
 
 
-## 
+## Fabric embedded in Rascal
+
+- `src/lang/fabric/demo/QL_[1-5].rsc`: leveled grammar of the QL DSL.
+
+- `src/lang/fabric/demo/QL_NL_fabric.rsc`: Dutch Fabric grammar of QL.
+
+- `src/lang/fabric/demo/QL_NL.rsc`: Dutch QL grammar generated from stitching.
+
+- `src/lang/fabric/demo/Main.rsc`: run the `main()` function to see how a Dutch QL program is unraveled to its base syntax, and to an AST using `implode` (see `src/util/Implode.rsc` for the implementation of `implode`).
+
+
