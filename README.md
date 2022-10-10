@@ -43,7 +43,7 @@ The working of Fabric can be explored by opening the files with the extension "g
 
 - `src/lang/rebel2/dutch/Main.rsc`: run the `main()` to see how Dutch Rebel2 files (in subfolder `demo`) are unraveld to their base syntax.
 
-## Overhead of unravel 
+## Performance overhead of unravel 
 
 Import `/src/lang/fabric/demo/Main` in the terminal by issuing `import lang::fabric::demo::Main;`. 
 Then execute `randomizedTests(n=100, depth=10);`, where you can vary the values for `n` (= number of trials), and `depth` (maximum sentence depth).
