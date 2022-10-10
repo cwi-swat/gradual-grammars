@@ -11,7 +11,7 @@ level 2
   bool = true: "waar" | false: "onwaar"
   question = ifThen: "als"  _  "dan" ":" _ 
 
-level 3 // maybe not relevant (not show?)
+level 3 
   question
     = ifThen: "als" "(" _ ")" "dan" "{" _ "}"
     | ifThenError: "als" "(" _ ")" _
