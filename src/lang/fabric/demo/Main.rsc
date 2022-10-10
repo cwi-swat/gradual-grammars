@@ -11,6 +11,7 @@ import util::Benchmark;
 import util::GenSen;
 import lang::csv::IO;
 import ParseTree;
+import List;
 
 import String;
 import IO;
@@ -58,13 +59,13 @@ tuple[start[Form], int] unravelWithTime(start[Form] f) {
 }
 
 
-alias Bench = rel[int size, int parse, int unravel, int implode];
+alias Bench = lrel[int size, int parse, int unravel, int implode];
 
 
 void randomizedTests(int n=100, int depth=10) {
   nl = lang::fabric::demo::ParseQL_NL::reflect();
 
-  Bench bench = {};
+  Bench bench = [];
 
   int nActual = 0;
 
@@ -101,14 +102,14 @@ void randomizedTests(int n=100, int depth=10) {
         z = implodeQL_NL(pt);
         int tImplode = getMilliTime();
         
-        bench += {<size(src), t1 - t0, n, tImplode - t2>};
+        bench += [<size(src), t1 - t0, n, tImplode - t2>];
 
         println("size = <size(src)>, parse = <t1 - t0>, unravel = <n>, implode <tImplode - t2>");
 
   }
 
   str csv = "size,parse,unravel,implode\n";
-  for (<a, b, c, d> <- bench) {
+  for (<a, b, c, d> <- sort(bench)) {
     csv += "<a>,<b>,<c>,<d>\n";
   }
 

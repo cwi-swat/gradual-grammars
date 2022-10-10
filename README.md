@@ -49,5 +49,9 @@ Import `/src/lang/fabric/demo/Main` in the terminal by issuing `import lang::fab
 Then execute `randomizedTests(n=100, depth=10);`, where you can very the values for `n` (= number of trials), and `depth` (maximum sentence depth).
 The results will be written to `unravel.csv` file in the root folder of the project.
 
+If you have [gnuplot](http://www.gnuplot.info/) available, you may plot the result by executing `gnuplot -p unravel.gnuplot`, and open the resulting `unravel.pdf`.
+
+
+
 
 
