@@ -56,7 +56,7 @@ list[DocumentSymbol] myOutliner(start[Module] input) {
 void main() {
     registerLanguage(
         language(
-            pathConfig(srcs = [|std:///|, |project://gradual-grammars/src|]),
+            pathConfig(srcs = [|std:///|, |project://gradual-grammars-artifact-sle-2022/src|]),
             "Gradual Grammar",
             "gradgram",
             "lang::fabric::VSCode",
