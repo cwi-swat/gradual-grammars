@@ -4,9 +4,10 @@
 
 - Install [VS Code](https://code.visualstudio.com/)
 
-- From the extensions pane, install [Rascal](https://marketplace.visualstudio.com/items?itemName=UseTheSource.rascalmpl). Note, you don't need the link, just search for "Rascal" in the market place from within VS Code.
+- From the extensions pane, install [Rascal](https://marketplace.visualstudio.com/items?itemName=UseTheSource.rascalmpl). Note, you don't need the link, just search for "Rascal" in the market place from within VS Code. If VS Code warns that Java 11 is required for the Rascal extension, please follow the instructions and install it. 
 
-- From the File menu in VS Code, select "Add folder to workspace", and select the folder where you've unzipped the artifact.
+- From the File menu in VS Code, select "Add folder to workspace", and select the folder of the unzipped the artifact.
+  _NB: make sure that the folder is named `gradual-grammars-artifact-sle-2022`, and not, for instance `gradual-grammars-artifact-sle-2022 (2)`. The source code depends on this.
 
 - Go to the the file `src/ArtifactSLE22.rsc` and open it. If all is well, a link should occur above the first line of the module, "Import in new Rascal terminal". Click the link.
 
