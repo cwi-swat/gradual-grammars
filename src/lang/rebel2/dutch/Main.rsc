@@ -13,8 +13,8 @@ void main() {
   type[start[Module_NL]] fabric = lang::rebel2::dutch::Rebel2_NL_fabric::reflect();
   
   dutchRebels = [
-     |project://gradual-grammars/src/lang/rebel2/demo/Counter.rebel2_nl|,
-     |project://gradual-grammars/src/lang/rebel2/demo/DoctorsAndRoster.rebel2_nl|
+     |project://gradual-grammars-artifact-sle-2022/src/lang/rebel2/demo/Counter.rebel2_nl|,
+     |project://gradual-grammars-artifact-sle-2022/src/lang/rebel2/demo/DoctorsAndRoster.rebel2_nl|
   ];
   
   for (loc dutch <- dutchRebels) {

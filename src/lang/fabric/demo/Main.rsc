@@ -21,7 +21,7 @@ void main() {
   type[start[Form]] base = lang::fabric::demo::QL::reflect();
   type[start[Form_NL]] fabric = lang::fabric::demo::QL_NL_fabric::reflect();
   
-  dutchQL = |project://gradual-grammars/src/lang/fabric/demo/taxform.qlnl|;
+  dutchQL = |project://gradual-grammars-artifact-sle-2022/src/lang/fabric/demo/taxform.qlnl|;
   
   pt = parseQL_NL(dutchQL);
   
@@ -45,7 +45,7 @@ void main() {
 void stitchDutchQL() {
   base = lang::fabric::demo::QL::reflect();
   fabric = lang::fabric::demo::QL_NL_fabric::reflect();
-  path = |project://gradual-grammars/src/lang/fabric/demo|;
+  path = |project://gradual-grammars-artifact-sle-2022/src/lang/fabric/demo|;
   writeStitchedGrammar(base, fabric, "NL", path, "lang::fabric::demo::QL_NL");
 }
 
@@ -116,5 +116,5 @@ void randomizedTests(int n=100, int depth=10) {
 
   str sActual = "<nActual>";
   str sDepth = "<depth>";
-  writeFile(|project://gradual-grammars/unravel.csv|, csv);
+  writeFile(|project://gradual-grammars-artifact-sle-2022/unravel.csv|, csv);
 }
